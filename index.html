@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>alligatr</title>
+   <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+   <script type="text/javascript">
+    $(function() {
+      console.log($(window.location.hash));
+      if (!$(window.location.hash)[0])
+        window.location.hash = '#main';
+      else
+        change();
+      
+      function change() {
+        $('.content').hide();
+        $(window.location.hash).show();
+        $('.nav-btn').removeClass('active');
+        $(window.location.hash + '-btn').addClass('active');
+      }
+      $(window).on('hashchange', change);
+    });
+   </script>
+   <link rel="stylesheet" href="alligatr.css" />
+</head>
+<body>
+  <div class="page">
+    <img class="logo" src="logo.png" />
+    <a class="header" href="#main"><h1>alligatr</h1></a>
+
+    <div class="nav">
+      <h2>real</h2>
+      <p>
+        <a class="nav-btn" href="http://alligator.github.io/lake.js/">lake.js</a>
+        <a class="nav-btn" href="#mbm" class="content-switcher" id="mbm-btn">MadeByMike</a>
+        <a class="nav-btn" href="#irc" class="content-switcher" id="irc-btn">IRC Stats</a>
+        <a class="nav-btn" href="#sgdq" class="content-switcher" id="sgdq-btn">SGDQ stats</a>
+      </p>
+
+      <h2>strange</h2>
+      <p>
+        <a href="/canvas-things.html">HTML5 Experiments</a>
+      </p>
+
+      <h2>stuff</h2>
+      <p>
+        <a href="http://github.com/Alligator/">GitHub</a>
+        <a href="http://soundcloud.com/enemyforestbrigade/">SoundCloud</a>
+      </p>
+    </div>
+
+    <div class="content" id="main">
+      <h2>hello</h2>
+      <p>I'm Reece Selwood. I do weird programming things in the UK. Check out the stuff above.</p>
+   
+      <h2>so what can you do?</h2>
+      <ul>
+        <li>
+        Python
+        <ul><li>I love it, probably a lil too much.</li></ul>
+        </li>
+        <li>
+        Objective-C
+        <ul><li>OO in C done the right way.</li></ul>
+        </li>
+        <li>
+        JavaScript
+        <ul><li>CoffeeScript too, and a smidge of node.js.</li></ul>
+        </li>
+        <li>
+        HTML/CSS
+        <ul><li>HTML5/CSS3 get all the web 2.0s.</li></ul>
+        </li>
+        <li>
+        C&#35;
+        <ul><li>If you're targeting the CLR it's gotta be C&#35;.</li></ul>
+        </li>
+        <li>
+        Lua
+        <ul><li>Clean and simple, how things should be.</li></ul>
+        </li>
+        <li>
+        Perl/Ruby/PHP/C/C++/Actionscript
+        <ul><li>I've written small projects in these at one time or another.</li></ul>
+        </li>
+      </ul>
+   
+      <h2>contact information</h2>
+      <a href="mailto:contact@alligatr.co.uk">contact@alligatr.co.uk</a><br />
+      <a href="/Reece Selwood - CV.pdf">CV (pdf)</a>
+    </div>
+
+    <div class="content secondary" id="mbm">
+      <h2>MadeByMike</h2>
+      <p>I wrote this site for a friend back in 2010. It's pretty simple, all static HTML and no CMS but it's still going this many years later so I must have done something right.</p>
+      <p><a href="http://madebymike.co.uk/">MadeByMike</a></p>
+      <p><a href="#main">&laquo; Back</a></p>
+    </div>
+
+    <div class="content secondary" id="irc">
+      <h2>IRC Stats</h2>
+      <p>Up-to-date stats from an IRC channel. Just a little project to try out <a href="http://raphaeljs.com/">Raphael</a>. I spend too much time on IRC.</p>
+      <p><a href="http://irc.alligatr.co.uk/">IRC Stats</a></p>
+      <p><a href="#main">&laquo; Back</a></p>
+    </div>
+
+    <div class="content secondary" id="sgdq">
+      <h2>SGDQ Stats</h2>
+      <p>Some graphs representing viewers/time from 2013 <a href="http://marathon.speeddemosarchive.com/">Summer Games Done Quick</a> speedrunning marathon. Mostly powered by Google Charts.</p>
+      <p><a href="http://irc.alligatr.co.uk/sgdq">SGDQ Stats</a></p>
+      <p><a href="#main">&laquo; Back</a></p>
+    </div>
+  </div>
+</body>
+</html>
