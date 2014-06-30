@@ -32,10 +32,9 @@
       <h2>real</h2>
       <p>
         <a class="nav-btn" href="http://alligator.github.io/lake.js/">lake.js</a>
-        <a class="nav-btn" href="#mbm" class="content-switcher" id="mbm-btn">MadeByMike</a>
+        <a class="nav-btn" href="#gdq" class="content-switcher" id="gdq-btn">AGDQ & SGDQ Stats</a>
         <a class="nav-btn" href="#irc" class="content-switcher" id="irc-btn">IRC Stats</a>
-        <a class="nav-btn" href="#sgdq" class="content-switcher" id="sgdq-btn">SGDQ stats</a>
-        <a class="nav-btn" href="#agdq" class="content-switcher" id="agdq-btn">AGDQ 2014 stats</a>
+        <a class="nav-btn" href="#mbm" class="content-switcher" id="mbm-btn">MadeByMike</a>
       </p>
 
       <h2>strange</h2>
@@ -107,17 +106,21 @@
       <p><a href="#main">&laquo; Back</a></p>
     </div>
 
-    <div class="content secondary" id="sgdq">
-      <h2>SGDQ Stats</h2>
-      <p>Some graphs representing viewers/time from 2013 <a href="http://marathon.speeddemosarchive.com/">Summer Games Done Quick</a> speedrunning marathon. Mostly powered by Google Charts.</p>
-      <p><a href="http://irc.alligatr.co.uk/sgdq">SGDQ Stats</a></p>
-      <p><a href="#main">&laquo; Back</a></p>
-    </div>
+    <div class="content secondary" id="gdq">
+      <h2>AGDQ & SGDQ Stats</h2>
+      <p><a href="https://gamesdonequick.com/">AGDQ (Awesome Games Done Quick) and SGDQ (Summer Games Done Quick)</a> are speedrunning marathons held in the winter and the summer respectively. I made a simple page to track the number of viewers over time for SGDQ in 2013 and I've been iterating on it for each marathon since.</p>
 
-    <div class="content secondary" id="agdq">
-      <h2>AGDQ 2014 Stats</h2>
-      <p>This started out as a small revamp of the <a href="http://irc.alligatr.co.uk/sgdq">SGDQ Stats</a> page for the Awesome Games Done Quick 2014 marathon, but I ended up switching from Google Charts to <a href="http://d3js.org">d3.js</a> a few days in. It features a better page design and better graphs in general.</p>
+      <h3>SGDQ 2014 Stats</h3>
+      <p>This is a small iteration on the previous version. A new colour scheme and some minor optimizations mean it runs faster and has less gaps.</p>
+      <p><a href="http://irc.alligatr.co.uk/sgdq14">SGDQ 2014 Stats</a></p>
+
+      <h3>AGDQ 2014 Stats</h3>
+      <p>The was the first version to use d3.js. I made it look all nice and shiny with a new-ish layout and a colour palette from Adobe Kuler. The backend was still quite wobbly so the graph has lots of gaps and strange data points.</p>
       <p><a href="http://irc.alligatr.co.uk/agdq14">AGDQ 2014 Stats</a></p>
+
+      <h3>SGDQ 2013 Stats</h3>
+      <p>The original. This version used the Google Charts API. I wouldn't recommend it.</p>
+      <p><a href="http://irc.alligatr.co.uk/sgdq">SGDQ Stats</a></p>
       <p><a href="#main">&laquo; Back</a></p>
     </div>
   </div>
