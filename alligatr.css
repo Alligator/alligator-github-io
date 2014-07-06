@@ -1,4 +1,4 @@
-@import url(http://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400);
+@import url(http://fonts.googleapis.com/css?family=Montserrat);
 
 body, html {
   margin: 0;
@@ -6,11 +6,12 @@ body, html {
 }
 
 body {
-  font-family: 'Source Sans Pro', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   color: #e7e7e7;
   border-top: 4px solid #64b383;
   font-size: 14pt;
   background: #181818;
+  line-height: 1.35;
 }
 
 h1, h2, h3 {
@@ -39,13 +40,21 @@ p {
 
 .content {
   float: right;
-  width: 600px;
+  width: 580px;
 }
+
+.cols { overflow: hidden; }
+.rcol, .lcol { width: 280px; }
+.lcol { float: left; }
+.rcol { float: right; }
 
 .nav {
   float: left;
-  width: 180px;
+  width: 200px;
   margin-right: 18px;
+}
+.nav-btn {
+  margin: 2px 0;
 }
 .nav a  {
   display: block;
@@ -72,6 +81,11 @@ a {
 a:hover {
   color: #82eca6;
 }
+.active, .nav a:hover {
+  background-color: #64b383;
+  color: #181818;
+  border-radius: 5px;
+}
 
 .logo {
   float: left;
@@ -81,10 +95,6 @@ a:hover {
 
 .secondary {
   display: none;
-}
-
-.active {
-  color: #82eca6;
 }
 
 .header {
