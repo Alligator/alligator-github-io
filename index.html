@@ -8,7 +8,7 @@
     $(function() {
       console.log($(window.location.hash));
       if (!$(window.location.hash)[0])
-        window.location.hash = '#main';
+        $('#main').show();
       else
         change();
       
@@ -31,9 +31,9 @@
     <div class="nav">
       <h2>real</h2>
       <p>
-        <a class="nav-btn" href="http://alligator.github.io/lake.js/">lake.js</a>
         <a class="nav-btn" href="#gdq" class="content-switcher" id="gdq-btn">AGDQ & SGDQ Stats</a>
         <a class="nav-btn" href="#irc" class="content-switcher" id="irc-btn">IRC Stats</a>
+        <a class="nav-btn" href="http://alligator.github.io/lake.js/">lake.js</a>
         <a class="nav-btn" href="#mbm" class="content-switcher" id="mbm-btn">MadeByMike</a>
       </p>
 
@@ -92,6 +92,8 @@
           </ul>
         </div>
       </div>
+
+      <p>I like data visualisation, especially making interactive web-based visualisations using d3.js.</p>
 
       <h2>contact information</h2>
       <a href="mailto:contact@alligatr.co.uk">contact@alligatr.co.uk</a><br />
