@@ -1,126 +1,273 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>alligatr</title>
-   <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
-   <script type="text/javascript">
-    $(function() {
-      console.log($(window.location.hash));
-      if (!$(window.location.hash)[0])
-        $('#main').show();
-      else
-        change();
-      
-      function change() {
-        $('.content').hide();
-        $(window.location.hash).show();
-        $('.nav-btn').removeClass('active');
-        $(window.location.hash + '-btn').addClass('active');
-      }
-      $(window).on('hashchange', change);
-    });
-   </script>
-   <link rel="stylesheet" href="alligatr.css" />
-</head>
+<!doctype html>
+<meta charset="utf-8">
+<link rel="stylesheet" href="./static/style.css">
+<title> — alligatr</title>
 <body>
+  <header>
+    <h1>alligatr</h1>
+    <nav>
+      <!-- <ul class="nav navbar-nav">
+        <li class="active"><a href="./">Welcome</a></li>
+        
+          <li><a href="./projects/">Projects</a></li>
+        
+          <li><a href="./about">About</a></li>
+        
+      </ul> -->
+    </nav>
+  </header>
   <div class="page">
-    <a href="#main"><img class="logo" src="logo.png" /></a>
-    <a class="header" href="#main"><h1>alligatr</h1></a>
+    
+  <h1></h1>
+  <p>I'm Reece Selwood/alligator. I'm based in Kent in the UK and I do weird programming things.</p>
+<p><a href="./cv">CV</a><br />
+<a href="./contact@alligatr.co.uk">contact@alligatr.co.uk</a><br />
+<a href="https://github.com/Alligator">GitHub</a></p>
 
-    <div class="nav">
-      <h2>real</h2>
-      <p>
-        <a class="nav-btn" href="#gdq" class="content-switcher" id="gdq-btn">AGDQ & SGDQ Stats</a>
-        <a class="nav-btn" href="#irc" class="content-switcher" id="irc-btn">IRC Stats</a>
-        <a class="nav-btn" href="http://alligator.github.io/lake.js/">lake.js</a>
-      </p>
-
-      <h2>strange</h2>
-      <p>
-        <a href="http://pizza.alligatr.co.uk/">Bits 'n bobs</a>
-        <a href="/canvas-things.html">HTML5 Experiments</a>
-      </p>
-
-      <h2>stuff</h2>
-      <p>
-        <a href="http://blog.alligatr.co.uk/">Blog</a>
-        <a href="http://github.com/Alligator/">GitHub</a>
-        <a href="http://soundcloud.com/enemyforestbrigade/">SoundCloud</a>
-      </p>
-    </div>
-
-    <div class="content" id="main">
-      <h2>hello</h2>
-      <p>I'm Reece Selwood. I do weird programming things in the UK. Check out the stuff to the left.</p>
-   
-      <h2>so what can you do?</h2>
-      <div class="cols">
-        <div class="lcol">
-          <ul>
-            <li>
-              JavaScript
-              <ul><li>I've been a professional JavaScript developer since 2014.</li></ul>
-            </li>
-            <li>
-              Python
-              <ul><li>Still the langauge I go to for quick projects.</li></ul>
-            </li>
-          </ul>
-        </div>
-
-        <div class="rcol">
-          <ul>
-            <li>
-              C&#35;
-              <ul><li>I also write this at my job, not all the time however.</li></ul>
-            </li>
-            <li>
-              Go
-              <ul><li>I'm learning Go in my spare time. It's an exciting language.</li></ul>
-            </li>
-          </ul>
-        </div>
+  <h2>Projects</h2>
+    <div class="project">
+    <div class="project__body">
+      <div class="project__title">
+        
+        <a href="https://irc.alligatr.co.uk/agdq18/">Games Done Quick Tracker</a>
+        
       </div>
+      <div class="project__year">
+        2013 onwards
+      </div>
+      <p>I've been running an unofficial viewers/donations tracker for the biannual <a href="https://gamesdonequick.com/">Games Done Quick</a> marathons since 2013.</p>
+<table>
+<thead><tr>
+<th>Links</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2019</td>
+<td><a href="https://irc.alligatr.co.uk/agdq19/">AGDQ</a></td>
+<td></td>
+</tr>
+<tr>
+<td>2018</td>
+<td><a href="https://irc.alligatr.co.uk/agdq18/">AGDQ</a></td>
+<td><a href="https://irc.alligatr.co.uk/sgdq18/">SGDQ</a></td>
+</tr>
+<tr>
+<td>2017</td>
+<td><a href="https://irc.alligatr.co.uk/agdq17/">AGDQ</a></td>
+<td><a href="https://irc.alligatr.co.uk/sgdq17/">SGDQ</a></td>
+</tr>
+<tr>
+<td>2016</td>
+<td><a href="https://irc.alligatr.co.uk/agdq16/">AGDQ</a></td>
+<td><a href="https://irc.alligatr.co.uk/sgdq16/">SGDQ</a></td>
+</tr>
+<tr>
+<td>2015</td>
+<td><a href="https://irc.alligatr.co.uk/agdq15/">AGDQ</a></td>
+<td><a href="https://irc.alligatr.co.uk/sgdq15/">SGDQ</a></td>
+</tr>
+<tr>
+<td>2014</td>
+<td><a href="https://irc.alligatr.co.uk/agdq14/">AGDQ</a></td>
+<td><a href="https://irc.alligatr.co.uk/sgdq14/">SGDQ</a></td>
+</tr>
+<tr>
+<td>2013</td>
+<td></td>
+<td><a href="https://irc.alligatr.co.uk/sgdq/">SGDQ</a></td>
+</tr>
+</tbody>
+</table>
 
-      <p>I like data visualisation, especially making interactive web-based visualisations using d3.js.</p>
 
-      <h2>contact information</h2>
-      <a href="mailto:contact@alligatr.co.uk">contact@alligatr.co.uk</a><br />
-      <a href="/rselwood.pdf">CV (pdf)</a>
+      
+
+      
     </div>
-
-    <div class="content secondary" id="mbm">
-      <h2>MadeByMike</h2>
-      <p>I wrote this site for a friend back in 2010. It's pretty simple, all static HTML and no CMS but it's still going this many years later so I must have done something right.</p>
-      <p><a href="http://madebymike.co.uk/">MadeByMike</a></p>
-      <p><a href="#main">&laquo; Back</a></p>
-    </div>
-
-    <div class="content secondary" id="irc">
-      <h2>IRC Stats</h2>
-      <p>Up-to-date stats from an IRC channel. Just a little project to try out <a href="http://raphaeljs.com/">Raphael</a>. I spend too much time on IRC.</p>
-      <p><a href="http://irc.alligatr.co.uk/">IRC Stats</a></p>
-      <p><a href="#main">&laquo; Back</a></p>
-    </div>
-
-    <div class="content secondary" id="gdq">
-      <h2>AGDQ & SGDQ Stats</h2>
-      <p><a href="https://gamesdonequick.com/">AGDQ (Awesome Games Done Quick) and SGDQ (Summer Games Done Quick)</a> are speedrunning marathons held in the winter and the summer respectively. I made a simple page to track the number of viewers over time for SGDQ in 2013 and I've been iterating on it for each marathon since.</p>
-
-      <h3>SGDQ 2014 Stats</h3>
-      <p>This is a small iteration on the previous version. A new colour scheme and some minor optimizations mean it runs faster and has less gaps.</p>
-      <p><a href="http://irc.alligatr.co.uk/sgdq14">SGDQ 2014 Stats</a></p>
-
-      <h3>AGDQ 2014 Stats</h3>
-      <p>The was the first version to use d3.js. I made it look all nice and shiny with a new-ish layout and a colour palette from Adobe Kuler. The backend was still quite wobbly so the graph has lots of gaps and strange data points.</p>
-      <p><a href="http://irc.alligatr.co.uk/agdq14">AGDQ 2014 Stats</a></p>
-
-      <h3>SGDQ 2013 Stats</h3>
-      <p>The original. This version used the Google Charts API. I wouldn't recommend it.</p>
-      <p><a href="http://irc.alligatr.co.uk/sgdq">SGDQ Stats</a></p>
-      <p><a href="#main">&laquo; Back</a></p>
-    </div>
+    
   </div>
+
+  <div class="project">
+    <div class="project__body">
+      <div class="project__title">
+        
+        <a href="https://spongeh.itch.io/hot-air">Hot Air</a>
+        
+      </div>
+      <div class="project__year">
+        2018
+      </div>
+      <p>A balloon fight-ish arcade game about avoiding awkward family conversations at Christmas. Me and <a href="http://d8d.org/">sponge</a>'s entry into the <a href="https://itch.io/jam/awful-holiday-2018">Awful Holiday Jam 2018</a>.</p>
+
+
+      
+        <p><p>Written in wren using <a href="https://github.com/sponge/sdlgame/">sponge's 2D game engine</a>.</p>
+</p>
+      
+
+      
+        <a href="https://github.com/Alligator/awful-holiday-jam-2018">Source</a>
+      
+    </div>
+    
+    <img class="project__image" src="hotair.png">
+    
+  </div>
+
+  <div class="project">
+    <div class="project__body">
+      <div class="project__title">
+        
+        <a href="https://alligator.itch.io/clive">Clive Sturridge&#39;s Battlement Defence</a>
+        
+      </div>
+      <div class="project__year">
+        2018
+      </div>
+      <p>The story of one fictional game developers career, told tower defense game by tower defense game. Me and <a href="http://d8d.org/">sponge</a>'s entry into the <a href="https://itch.io/jam/awful-summer-jam-2018">Awful Summer Jam 2018</a>.</p>
+
+
+      
+        <p><p>Written in wren using <a href="https://github.com/sponge/sdlgame/">sponge's 2D game engine</a>.</p>
+</p>
+      
+
+      
+        <a href="https://github.com/sponge/sdlgame/tree/master/clive">Source</a>
+      
+    </div>
+    
+    <img class="project__image" src="battlement.png">
+    
+  </div>
+
+  <div class="project">
+    <div class="project__body">
+      <div class="project__title">
+        
+        <a href="https://alligator.itch.io/molasses">Molasses!</a>
+        
+      </div>
+      <div class="project__year">
+        2018
+      </div>
+      <p>My entry into the Awful Winter Jam 2018. It won "Best Use of Theme".</p>
+
+
+      
+        <p><p>Written in JavaScript, for the TIC-80 fantasy console.</p>
+</p>
+      
+
+      
+        <a href="https://github.com/Alligator/awful-winter-jam-2018">Source</a>
+      
+    </div>
+    
+    <img class="project__image" src="molasses.png">
+    
+  </div>
+
+  <div class="project">
+    <div class="project__body">
+      <div class="project__title">
+        
+        <a href="https://alligator.itch.io/70s-dad-drivin">70s Dad Drivin&#39;</a>
+        
+      </div>
+      <div class="project__year">
+        2017
+      </div>
+      <p>A driving game about a dad mostly yelling. My entry into the GitHub Game Jam 2017. It came 15th overall out of 206 entries.</p>
+
+
+      
+        <p><p>Written in Lua, for the PICO-8 fantasy console.</p>
+</p>
+      
+
+      
+        <a href="https://github.com/Alligator/game-off-throwback">Source</a>
+      
+    </div>
+    
+    <img class="project__image" src="dad.png">
+    
+  </div>
+
+  <div class="project">
+    <div class="project__body">
+      <div class="project__title">
+        
+        <a href="http://alligatr.co.uk/lake.js/">Lake.js</a>
+        
+      </div>
+      <div class="project__year">
+        2012
+      </div>
+      <p>Someone said it would be funny to remake the old Java lake applet effect using JavaScript and the canvas, so I did the damn thing.</p>
+
+
+      
+
+      
+        <a href="https://github.com/Alligator/lake.js">Source</a>
+      
+    </div>
+    
+  </div>
+
+  <div class="project">
+    <div class="project__body">
+      <div class="project__title">
+        
+        <a href="http://alligatr.co.uk/sparklines/">SVG Sparklines</a>
+        
+      </div>
+      <div class="project__year">
+        2014
+      </div>
+      <p>A tiny JavaScript library to render sparklines in HTML content.</p>
+
+
+      
+
+      
+        <a href="https://github.com/Alligator/sparklines">Source</a>
+      
+    </div>
+    
+  </div>
+
+  <div class="project">
+    <div class="project__body">
+      <div class="project__title">
+        
+        Other stuff
+        
+      </div>
+      <div class="project__year">
+        
+      </div>
+      <p><a href="http://blog.alligatr.co.uk/">Blog</a> - rarely updated.<br />
+<a href="http://pizza.alligatr.co.uk/">pizza.alligatr</a> - experiments that don't fit anywhere.<br />
+<a href="http://alligatr.co.uk/canvas-things.html">old alligatr</a> - even older experiments that don't fit anywhere.<br /></p>
+
+
+      
+
+      
+    </div>
+    
+  </div>
+
+  </div>
+  <footer>
+    <p>
+      &copy; 2019 Reece Selwood.
+      <br />
+      This site was made using <a href="https://www.getlektor.com/">Lektor</a>. It's good.
+    </p>
+  </footer>
 </body>
-</html>
