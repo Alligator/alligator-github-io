@@ -31,6 +31,7 @@ a:hover {
 .project__image {
     display: inline-block;
     width: 100px;
+    min-width: 100px;
     height: 100px;
 }
 .project__title {
