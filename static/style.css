@@ -59,8 +59,9 @@ a:hover {
 }
 
 .cv {
-    font-family: 'Georgia', serif;
+    font-family: 'Crimson Text', 'Georgia', serif;
     font-size: 12pt;
+    line-height: 1.5;
     margin: 1rem auto;
 }
 @media print {
@@ -68,7 +69,7 @@ a:hover {
         font-size: 10pt;
     }
     .cv {
-        max-width: 76ex;
+      padding: 0 4rem;
     }
 }
 .cv header {
