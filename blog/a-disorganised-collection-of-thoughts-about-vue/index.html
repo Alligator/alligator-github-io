@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="../../static/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>a disorganised collection of thoughts about vue</title>
+</head>
+<body>
+  <header>
+    
+<h1>
+  <a href="../../blog/">alligator's blog</a>
+</h1>
+
+  </header>
+  <div class="page">
+    
+<h2>a disorganised collection of thoughts about vue</h2>
+Nov 23, 2019
+<div class="blog-post">
+
+  
+
+  <p>I'm trying to learn vue, by rewriting a react application in it. Here are some disorganised thoughts.</p>
+<p>At first I thought it felt a bit more prescriptive than React, but on reflection that's not quite it. The surface area of the vue API seems quite large, so I don't think it's trying to force you to do things in a particular way. What it actually is, is that it feels more <em>magic</em> than React.</p>
+<p>JSX is actually fairly simple, rendering a component just compiles down to a function call. As a result of that, you can use regular JavaScript constructs. Want to loop over an array and render a component for each? Use map. Want to conditionally render something? Use a ternary. Those are <em>actual</em> loops and <em>actual</em> ternaries.</p>
+<p>Vue on the other hand, uses a set of custom attributes in the template to achieve the same thing. <code>v-for</code>, <code>v-if</code> and so on. The level of abstraction is useful for reducing boilerplate (think about the number of times you've had to write <code>{condtion &amp;&amp; (stuff to render)}</code>) but comes at the cost of simplicity. What if my use case is weird and doesn't quite fit in with the set of attributes vue provides? I don't know if that will happen, but I <em>feel</em> like it's going to happen sooner or later, and then I don't know what the recourse is.</p>
+<hr>
+<p><strong>Update</strong> turns out <a href="https://vuejs.org/v2/guide/render-function.html">vue supports render functions</a>, for when you need to go hog wild, so I guess that would be the recourse.</p>
+<hr>
+<p>Having said that, it quite often feels quite react-y and I imagine some of the same ideas and pattern will come into play. Components can be stateless or stateful, and they compose in similar ways. Of course this metaphor all breaks down when data binding enters the picture. I've had a fairly negative experience with data binding in the past (backbone, ugh, <em>knockout</em> double ugh) and I haven't used vue enough to say if it'll be any more positive.</p>
+<p>Actually, the very small amount of knockout I've used reminds me of vue in some ways. Custom attributes that express how certain things on an element should be bound to properties. Hmm.</p>
+<h2 id="performance">Performance</h2><p>React is fast in the simple case. It's not hard to write <em>terribly</em> performing react code though. Keeping things performing well requires a little bit of careful thought.</p>
+<p>Vue, via it's explicit binding, knows all of the things that might cause a component to re-render, so it can basically implement a smart <code>shouldComponentUpdate</code> for every component. That should make it generally faster in a large application, but I'm just theorising here.</p>
+<h2 id="composition">Composition</h2><p>We've all gotten (somewhat) used to the idea of presentational and container components in react as a Good Thing, even if we don't always actually follow the pattern. You can implement the same pattern in vue too, it has pure functional components, which enforce them being dumb presentation only components.</p>
+<p>The higher level patterns that exist in react for composition (compound components, render props, children as a function and so on) are more react-specific, but vue does have a concept similar to props.children in react called slots. I think you'd be able to implement compound components in quite similar way to react in vue.</p>
+<p>OK, actually the <a href="https://vuejs.org/v2/guide/components-slots.html#Named-Slots">named slots</a> look really interesting. That solves a bunch of the problems the patterns I mentioned before are aiming to solve. It's a bit odd, since the child component is still responsible for the <em>order</em> the slots are rendered in, which isn't the case with a compound component, but it's still a bit nicer than having to pass components in props.</p>
+<h2 id="styling">Styling</h2><p>React doesn't care how you style things. That means you end up with inline styles, styled components, style objects and more. Vue (seemingly) has one way to apply styles.</p>
+<p>In vue you use style tags, that look a lot like CSS modules. They can be scoped to a particular component or applied globally and live alongside the component. This pattern is actually very close to what I've settled on as my preferred way of styling react components, which is interesting. I've settled on CSS modules and keeping all of the styles with the component, using class names to handle styling changes based on props.</p>
+
+</div>
+<p>
+  <a href="../../blog/">blog index</a>
+</p>
+
+  </div>
+</body>
+</html>

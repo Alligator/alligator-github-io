@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="../../static/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>fixing ls colours</title>
+</head>
+<body>
+  <header>
+    
+<h1>
+  <a href="../../blog/">alligator's blog</a>
+</h1>
+
+  </header>
+  <div class="page">
+    
+<h2>fixing ls colours</h2>
+Jan 5, 2020
+<div class="blog-post">
+
+  
+
+  <p>A PSA for anyone who runs <code>ls</code> and is greeted with this legibility nightmare:</p>
+<p><img src="../../blog/ls-colours/green-ls.png" alt=""></p>
+<p>According to dircolors, the green background represents a directory that is other-writable:</p>
+<pre><code>$ dircolors -p | grep ";42"
+STICKY_OTHER_WRITABLE 30;42 # dir that is sticky and other-writable (+t,o+w)
+OTHER_WRITABLE 35;42 # dir that is other-writable (o+w) and not sticky
+</code></pre>
+<p>42, as part of an ANSI escape sequence, gives you a green background.</p>
+<p>Luckily it's easy to change by appending some commands to the end of the <code>LS_COLORS</code> environment variable. Here's how I'm doing that in my bashrc:</p>
+<pre><code>export LS_COLORS="${LS_COLORS}tw=01;34:ow=01;34:
+</code></pre>
+<p>This sets the tw (STICKY_OTHER_WRITABLE) and ow (OTHER_WRITABLE) colors to the same as a regular directory; blue foreground with no background.</p>
+<p>Also if you're curious, I tracked down <a href="https://lists.gnu.org/archive/html/bug-coreutils/2005-09/msg00023.html">the patch where those colours were introduced</a>.</p>
+
+</div>
+<p>
+  <a href="../../blog/">blog index</a>
+</p>
+
+  </div>
+</body>
+</html>
