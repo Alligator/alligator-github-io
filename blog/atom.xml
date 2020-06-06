@@ -2,5 +2,258 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title>alligator's blog</title>
+  <link rel="alternate" type="text/html" href="https://alligatr.co.uk/blog"/>
+  <link rel="self" type="application/atom+xml" href="https://alligatr.co.uk/blog/atom.xml"/>
+  
+  <updated>2020-06-06T00:00:00Z</updated>
+  <id>https://alligatr.co.uk/blog</id>
+  <author>
+    <name>alligator</name>
+  </author>
+
+  
+  <entry>
+    <title>beyond the code element</title>
+    <link href="https://alligatr.co.uk/blog/beyond-the-code-element/" />
+    <id>https://alligatr.co.uk/blog/beyond-the-code-element/</id>
+    <updated>2020-06-06T00:00:00Z</updated>
+    <content type="html">
+      <![CDATA[
+      <p>While reading <a href="https://devblogs.microsoft.com/oldnewthing/">the old new thing</a> I noticed that keyboard shortcuts in articles are shown using the <code>&lt;kbd&gt;</code> element, like so:</p>
+<div class="hll"><pre><span></span><span class="p">&lt;</span><span class="nt">kbd</span><span class="p">&gt;</span>Alt<span class="p">&lt;/</span><span class="nt">kbd</span><span class="p">&gt;</span> + <span class="p">&lt;</span><span class="nt">kbd</span><span class="p">&gt;</span>f4<span class="p">&lt;/</span><span class="nt">kbd</span><span class="p">&gt;</span>
+</pre></div>
+<p>This element was new to me, so I looked at <a href="https://html.spec.whatwg.org/multipage/text-level-semantics.html">the spec</a> and found there's a handful of useful elements for various computer-y things that, besides the <code>code</code> element, I'd never noticed before. Namely <code>kbd</code>, <code>var</code> and <code>samp</code>.</p>
+<p>At the time of writing, this blog doesn't have custom CSS for these elements beyond setting the font, so you will see them however your browser decides to render them.</p>
+<h2 id="kbd">kbd</h2><p><a href="https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-var-element">Spec</a></p>
+<p><code>kbd</code> represents user input. This is typically keyboard input, but could be other sorts of input, such as voice.</p>
+<p>Here's some example markup:</p>
+<div class="hll"><pre><span></span>Press <span class="p">&lt;</span><span class="nt">kbd</span><span class="p">&gt;</span>Alt<span class="p">&lt;/</span><span class="nt">kbd</span><span class="p">&gt;</span> + <span class="p">&lt;</span><span class="nt">kbd</span><span class="p">&gt;</span>F4<span class="p">&lt;/</span><span class="nt">kbd</span><span class="p">&gt;</span> to exit.
+</pre></div>
+<p>And the rendered result:</p>
+<p>Press <kbd>Alt</kbd> + <kbd>F4</kbd> to exit.</p>
+<h2 id="var">var</h2><p><a href="https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-var-element">Spec</a></p>
+<p><code>var</code> represents a variable. The spec has a fairly broad definition of this:</p>
+<blockquote><p>This could be an actual variable in a mathematical expression or programming context, an identifier representing a constant, a symbol identifying a physical quantity, a function parameter, or just be a term used as a placeholder in prose.</p>
+</blockquote>
+<p>Example markup:</p>
+<div class="hll"><pre><span></span><span class="p">&lt;</span><span class="nt">var</span><span class="p">&gt;</span>foo<span class="p">&lt;/</span><span class="nt">var</span><span class="p">&gt;</span> + <span class="p">&lt;</span><span class="nt">var</span><span class="p">&gt;</span>bar<span class="p">&lt;/</span><span class="nt">var</span><span class="p">&gt;</span> = <span class="p">&lt;</span><span class="nt">var</span><span class="p">&gt;</span>baz<span class="p">&lt;/</span><span class="nt">var</span><span class="p">&gt;</span>
+</pre></div>
+<p>Result:</p>
+<p><var>foo</var> + <var>bar</var> = <var>baz</var></p>
+<h2 id="samp">samp</h2><p><a href="https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-samp-element">Spec</a></p>
+<p><code>samp</code> represents output from a program or system.</p>
+<p>Example markup</p>
+<div class="hll"><pre><span></span>The system will print <span class="p">&lt;</span><span class="nt">samp</span><span class="p">&gt;</span>Bad command or file name<span class="p">&lt;/</span><span class="nt">samp</span><span class="p">&gt;</span>.
+</pre></div>
+<p>Result:</p>
+<p>The system will print <samp>Bad command or file name</samp>.</p>
+<h2 id="combinations">combinations</h2><p>These elements can be combined in interesting ways, for example <code>code</code> and <code>samp</code> elements can used to show input and output:</p>
+<div class="hll"><pre><span></span><span class="p">&lt;</span><span class="nt">pre</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">code</span><span class="p">&gt;</span>console.log(&#39;hello&#39;);<span class="p">&lt;/</span><span class="nt">code</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">samp</span><span class="p">&gt;</span>hello<span class="p">&lt;/</span><span class="nt">samp</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">pre</span><span class="p">&gt;</span>
+</pre></div>
+<p>By default the <code>code</code> and <code>samp</code> elements use a monospace font, so without extra styling this will look like a standard pre block:</p>
+<pre>
+<code>console.log('hello');</code>
+<samp>hello</samp>
+</pre><p>Of course you can go nuts styling those elements if you so wish:</p>
+<style>
+.styled-pre code {
+  color: lightpink;
+}
+.styled-pre code:before {
+  content: ' INPUT: '
+}
+
+.styled-pre samp {
+  color: lightgreen;
+}
+.styled-pre samp:before {
+  content: 'OUTPUT: '
+}
+</style><pre class="styled-pre">
+<code>console.log('hello');</code>
+<samp>hello</samp>
+</pre><p>If the <code>kbd</code> element is nested inside of a <code>samp</code> element, it represents user input being echoed back by the system, as would happen at a command interpreter:</p>
+<div class="hll"><pre><span></span><span class="p">&lt;</span><span class="nt">pre</span><span class="p">&gt;&lt;</span><span class="nt">samp</span><span class="p">&gt;</span><span class="ni">&amp;gt;</span> <span class="p">&lt;</span><span class="nt">kbd</span><span class="p">&gt;</span>wait<span class="p">&lt;/</span><span class="nt">kbd</span><span class="p">&gt;</span>
+time passes...
+<span class="p">&lt;/</span><span class="nt">samp</span><span class="p">&gt;&lt;/</span><span class="nt">pre</span><span class="p">&gt;</span>
+</pre></div>
+<pre><samp>&gt; <kbd>wait</kbd>
+time passes...
+</samp></pre><p>A <code>samp</code> nested inside a <code>kbd</code> element represents input based on system output, for example selecting a menu item being displayed by the system. This ends up being quite verbose, especially if there are multiple steps involved:</p>
+<div class="hll"><pre><span></span><span class="p">&lt;</span><span class="nt">kbd</span><span class="p">&gt;&lt;</span><span class="nt">samp</span><span class="p">&gt;</span>File<span class="p">&lt;/</span><span class="nt">samp</span><span class="p">&gt;&lt;/</span><span class="nt">kbd</span><span class="p">&gt;</span> <span class="ni">&amp;gt;</span> <span class="p">&lt;</span><span class="nt">kbd</span><span class="p">&gt;&lt;</span><span class="nt">samp</span><span class="p">&gt;</span>Open<span class="p">&lt;/</span><span class="nt">samp</span><span class="p">&gt;&lt;/</span><span class="nt">kbd</span><span class="p">&gt;</span>
+</pre></div>
+<p>So the spec recommends just using <code>kbd</code> instead:</p>
+<div class="hll"><pre><span></span><span class="p">&lt;</span><span class="nt">kbd</span><span class="p">&gt;</span>File <span class="ni">&amp;gt;</span> Open<span class="p">&lt;/</span><span class="nt">kbd</span><span class="p">&gt;</span>
+</pre></div>
+<p>They both render similarly, although the <code>&gt;</code> in the first example isn't in a monospace font, so it looks a little odd:</p>
+<p><kbd><samp>File</samp></kbd> &gt; <kbd><samp>Open</samp></kbd></p>
+<p>and just the <code>kbd</code> tag:</p>
+<p><kbd>File &gt; Open</kbd></p>
+<p>I always enjoy finding standard HTML elements to replace what would have previously been a div with a class.</p>
+
+      ]]>
+    </content>
+  </entry>
+  
+  <entry>
+    <title>vim tips from well wasted workdays</title>
+    <link href="https://alligatr.co.uk/blog/neovim-tips-from-well-wasted-workdays/" />
+    <id>https://alligatr.co.uk/blog/neovim-tips-from-well-wasted-workdays/</id>
+    <updated>2020-04-25T00:00:00Z</updated>
+    <content type="html">
+      <![CDATA[
+      <p>Below is a selection of useful bits and pieces taken from my vimrc. I intend for this to be a living document and will add new things as and when I find them.</p>
+<h2 id="productivity">productivity</h2><p>Perform common tasks in less time.</p>
+<h3 id="use-space-as-your-leader">use space as your leader</h3><p>This lets you hit the leader with both of your thumbs.</p>
+<div class="hll"><pre><span></span><span class="k">let</span> mapleader <span class="p">=</span> <span class="s2">&quot; &quot;</span>
+</pre></div>
+<p>I believe I learned about this from <a href="https://sheerun.net/2014/03/21/how-to-boost-your-vim-productivity/">this article</a>
+which has some other good tips, namely mapping common command mode commands to leader based key
+combinations:</p>
+<div class="hll"><pre><span></span><span class="nb">nnoremap</span> <span class="p">&lt;</span>Leader<span class="p">&gt;</span><span class="k">w</span> :<span class="k">w</span><span class="p">&lt;</span>CR<span class="p">&gt;</span>
+<span class="nb">nnoremap</span> <span class="p">&lt;</span>Leader<span class="p">&gt;</span><span class="k">f</span> :NERDTreeToggle<span class="p">&lt;</span>CR<span class="p">&gt;</span>
+</pre></div>
+<h3 id="create-ad-hoc-build/run-mappings">create ad-hoc build/run mappings</h3><p>Often all I need as a build tool is an ad-hoc binding to run a shell command. I
+use <kbd>&lt;Leader&gt;</kbd> <kbd>m</kbd> for this:</p>
+<div class="hll"><pre><span></span><span class="nb">nnoremap</span> <span class="p">&lt;</span>Leader<span class="p">&gt;</span><span class="k">m</span> :<span class="p">!</span>python %<span class="p">&lt;</span>CR<span class="p">&gt;</span>
+<span class="nb">nnoremap</span> <span class="p">&lt;</span>Leader<span class="p">&gt;</span><span class="k">m</span> :<span class="p">!</span><span class="k">make</span><span class="p">&lt;</span>CR<span class="p">&gt;</span>
+<span class="nb">nnoremap</span> <span class="p">&lt;</span>Leader<span class="p">&gt;</span><span class="k">m</span> :<span class="p">!</span>npm run <span class="k">start</span><span class="p">&lt;</span>CR<span class="p">&gt;</span>
+</pre></div>
+<h3 id="use-a-key-sequence-instead-of-escape">use a key sequence instead of escape</h3><p>Escape is a long way away from the home row:</p>
+<div class="hll"><pre><span></span><span class="nb">inoremap</span> fd ^[
+</pre></div>
+<p><kbd>jj</kbd> is often used for this, I prefer <kbd>fd</kbd> because I tend to keep my left hand on the home row more than my right. The <code>^[</code> is inserted via <kbd>&lt;C-v&gt;</kbd><kbd>escape</kbd>.</p>
+<h3 id="keep-the-cursor-centered-when-jumping-between-paragraphs">keep the cursor centered when jumping between paragraphs</h3><p><kbd>{</kbd> and <kbd>}</kbd> are great for hopping around blocks of code, with
+these mappings the buffer stays centred on what you're looking at while doing
+so.</p>
+<div class="hll"><pre><span></span><span class="nb">nnoremap</span> { {zz
+<span class="nb">nnoremap</span> } }zz
+</pre></div>
+<h2 id="utility">utility</h2><p>Useful tidbits I've created or collected.</p>
+<h3 id="open-windows-explorer-with-the-current-file-highlighted">open windows explorer with the current file highlighted</h3><div class="hll"><pre><span></span><span class="k">function</span><span class="p">!</span> OpenExplorer<span class="p">()</span>
+    <span class="k">let</span> <span class="nb">path</span> <span class="p">=</span> expand<span class="p">(</span><span class="s1">&#39;%:p&#39;</span><span class="p">)</span>
+    <span class="k">let</span> <span class="nb">path</span> <span class="p">=</span> substitute<span class="p">(</span><span class="nb">path</span><span class="p">,</span> <span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="s2">&quot;\\&quot;</span><span class="p">,</span> <span class="s2">&quot;g&quot;</span><span class="p">)</span>
+    execute <span class="s2">&quot;!start explorer /select,&quot;</span> . <span class="nb">path</span> . <span class="s2">&quot;\r&quot;</span>
+<span class="k">endfunction</span>
+
+<span class="k">if</span> has<span class="p">(</span><span class="s2">&quot;win32&quot;</span><span class="p">)</span>
+    <span class="nb">nnoremap</span> <span class="p">&lt;</span>F11<span class="p">&gt;</span> :<span class="k">call</span> OpenExplorer<span class="p">()&lt;</span>CR<span class="p">&gt;</span>
+<span class="k">endif</span>
+</pre></div>
+<p>This was surprisingly tricky. It took much longer than it should have to
+discover I needed to add a trailing carriage return to the path for this to
+work.</p>
+<h3 id="send-a-command-to-a-terminal-in-another-buffer-neovim-only">send a command to a terminal in another buffer (neovim only)</h3><p>In the terminal buffer, run this to find the job id of the terminal:</p>
+<div class="hll"><pre><span></span><span class="p">:</span>echo <span class="k">b</span>:terminal_job_id
+</pre></div>
+<p>Then in any buffer, run this to send text to it:</p>
+<div class="hll"><pre><span></span><span class="p">:</span><span class="k">call</span> jobsend<span class="p">(&lt;</span>job id<span class="p">&gt;,</span> <span class="s2">&quot;text&quot;</span><span class="p">)</span>
+</pre></div>
+<p>Useful when combined with an ad-hoc mapping:</p>
+<div class="hll"><pre><span></span><span class="nb">nnoremap</span> <span class="p">&lt;</span>Leader<span class="p">&gt;</span><span class="k">m</span> :<span class="k">call</span> jobsend<span class="p">(&lt;</span>job id<span class="p">&gt;,</span> <span class="s2">&quot;python main.py&quot;</span><span class="p">)&lt;</span>CR<span class="p">&gt;</span>
+</pre></div>
+<h3 id="run-a-command-without-changing-your-view">run a command without changing your view</h3><p>A very simple but useful function inspired by emacs'
+<a href="https://www.gnu.org/software/emacs/manual/html_node/elisp/Excursions.html">excursions</a>:</p>
+<div class="hll"><pre><span></span><span class="k">function</span><span class="p">!</span> ExcursionExec<span class="p">(</span>cmd<span class="p">)</span>
+    <span class="k">let</span> <span class="k">l</span>:winview <span class="p">=</span> winsaveview<span class="p">()</span>
+    execute <span class="k">a</span>:cmd
+    <span class="k">call</span> winrestview<span class="p">(</span><span class="k">l</span>:winview<span class="p">)</span>
+<span class="k">endfunction</span>
+</pre></div>
+<p>For example, I use this in a mapping that copies the current file to the system clipboard:</p>
+<div class="hll"><pre><span></span><span class="nb">nnoremap</span> <span class="p">&lt;</span>Leader<span class="p">&gt;</span>yf :<span class="k">call</span> ExcursionExec<span class="p">(</span><span class="s1">&#39;normal gg&quot;+yG&#39;</span><span class="p">)&lt;</span>CR<span class="p">&gt;</span>
+</pre></div>
+<h3 id="format-json">format JSON</h3><p>Format JSON using node:</p>
+<div class="hll"><pre><span></span>command<span class="p">!</span> FormatJson %<span class="p">!</span>node <span class="p">-</span><span class="k">e</span> <span class="s2">&quot;var fs = require(&#39;fs&#39;); console.log(JSON.stringify(JSON.parse(fs.readFileSync(process.stdin.fd, &#39;utf-8&#39;)), null, 2));&quot;</span>
+</pre></div>
+<h3 id="keep-the-buffers-equal-in-diff-mode">keep the buffers equal in diff mode</h3><p>Make vim behave like other diff tools:</p>
+<div class="hll"><pre><span></span><span class="k">if</span> &amp;<span class="nb">diff</span>
+    <span class="k">set</span> <span class="nb">equalalways</span>
+    <span class="k">au</span> <span class="nb">VimResized</span> * <span class="k">wincmd</span> <span class="p">=</span>
+<span class="k">endif</span>
+</pre></div>
+<h3 id="turn-off-search-highlighting-when-you-move">turn off search highlighting when you move</h3><p>No more <code>:nohlsearch</code></p>
+<div class="hll"><pre><span></span><span class="nb">noremap</span> <span class="p">&lt;</span>expr<span class="p">&gt;</span> <span class="p">&lt;</span>Plug<span class="p">&gt;(</span>StopHL<span class="p">)</span> execute<span class="p">(</span><span class="s1">&#39;nohlsearch&#39;</span><span class="p">)</span>
+<span class="nb">noremap</span><span class="p">!</span> <span class="p">&lt;</span>expr<span class="p">&gt;</span> <span class="p">&lt;</span>Plug<span class="p">&gt;(</span>StopHL<span class="p">)</span> execute<span class="p">(</span><span class="s1">&#39;nohlsearch&#39;</span><span class="p">)</span>
+
+<span class="k">function</span><span class="p">!</span> StopHL<span class="p">()</span>
+  <span class="k">if</span> <span class="p">!</span><span class="k">v</span>:<span class="nb">hlsearch</span> <span class="p">||</span> <span class="k">mode</span><span class="p">()</span> isnot <span class="s1">&#39;n&#39;</span>
+    <span class="k">return</span>
+  <span class="k">else</span>
+    <span class="k">sil</span> <span class="k">call</span> feedkeys<span class="p">(</span><span class="s2">&quot;\&lt;Plug&gt;(StopHL)&quot;</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span><span class="p">)</span>
+  <span class="k">endif</span>
+<span class="k">endfunction</span>
+
+augroup SearchHighlight
+  <span class="k">au</span><span class="p">!</span>
+  <span class="k">au</span> <span class="nb">CursorMoved</span> * <span class="k">call</span> StopHL<span class="p">()</span>
+  <span class="k">au</span> <span class="nb">InsertEnter</span> * <span class="k">call</span> StopHL<span class="p">()</span>
+augroup <span class="k">end</span>
+</pre></div>
+<p>There are plugins to do this, but this turns out to be all I need. This
+is taken from <a href="https://github.com/neovim/neovim/issues/5581">this GitHub issue</a>.
+You can follow the thread there to understand how and why this works, and why
+all of it is necessary.</p>
+
+      ]]>
+    </content>
+  </entry>
+  
+  <entry>
+    <title>fixing ls colours</title>
+    <link href="https://alligatr.co.uk/blog/ls-colours/" />
+    <id>https://alligatr.co.uk/blog/ls-colours/</id>
+    <updated>2020-01-05T00:00:00Z</updated>
+    <content type="html">
+      <![CDATA[
+      <p>A PSA for anyone who runs <code>ls</code> and is greeted with this legibility nightmare:</p>
+<p><img src="../../blog/ls-colours/green-ls.png" alt=""></p>
+<p>According to dircolors, the green background represents a directory that is other-writable:</p>
+<pre><code>$ dircolors -p | grep ";42"
+STICKY_OTHER_WRITABLE 30;42 # dir that is sticky and other-writable (+t,o+w)
+OTHER_WRITABLE 35;42 # dir that is other-writable (o+w) and not sticky
+</code></pre>
+<p>42, as part of an ANSI escape sequence, gives you a green background.</p>
+<p>Luckily it's easy to change by appending some commands to the end of the <code>LS_COLORS</code> environment variable. Here's how I'm doing that in my bashrc:</p>
+<pre><code>export LS_COLORS="${LS_COLORS}tw=01;34:ow=01;34:
+</code></pre>
+<p>This sets the tw (STICKY_OTHER_WRITABLE) and ow (OTHER_WRITABLE) colors to the same as a regular directory; blue foreground with no background.</p>
+<p>Also if you're curious, I tracked down <a href="https://lists.gnu.org/archive/html/bug-coreutils/2005-09/msg00023.html">the patch where those colours were introduced</a>.</p>
+
+      ]]>
+    </content>
+  </entry>
+  
+  <entry>
+    <title>a disorganised collection of thoughts about vue</title>
+    <link href="https://alligatr.co.uk/blog/a-disorganised-collection-of-thoughts-about-vue/" />
+    <id>https://alligatr.co.uk/blog/a-disorganised-collection-of-thoughts-about-vue/</id>
+    <updated>2019-11-23T00:00:00Z</updated>
+    <content type="html">
+      <![CDATA[
+      <p>I'm trying to learn vue, by rewriting a react application in it. Here are some disorganised thoughts.</p>
+<p>At first I thought it felt a bit more prescriptive than React, but on reflection that's not quite it. The surface area of the vue API seems quite large, so I don't think it's trying to force you to do things in a particular way. What it actually is, is that it feels more <em>magic</em> than React.</p>
+<p>JSX is actually fairly simple, rendering a component just compiles down to a function call. As a result of that, you can use regular JavaScript constructs. Want to loop over an array and render a component for each? Use map. Want to conditionally render something? Use a ternary. Those are <em>actual</em> loops and <em>actual</em> ternaries.</p>
+<p>Vue on the other hand, uses a set of custom attributes in the template to achieve the same thing. <code>v-for</code>, <code>v-if</code> and so on. The level of abstraction is useful for reducing boilerplate (think about the number of times you've had to write <code>{condtion &amp;&amp; (stuff to render)}</code>) but comes at the cost of simplicity. What if my use case is weird and doesn't quite fit in with the set of attributes vue provides? I don't know if that will happen, but I <em>feel</em> like it's going to happen sooner or later, and then I don't know what the recourse is.</p>
+<hr>
+<p><strong>Update</strong> turns out <a href="https://vuejs.org/v2/guide/render-function.html">vue supports render functions</a>, for when you need to go hog wild, so I guess that would be the recourse.</p>
+<hr>
+<p>Having said that, it quite often feels quite react-y and I imagine some of the same ideas and pattern will come into play. Components can be stateless or stateful, and they compose in similar ways. Of course this metaphor all breaks down when data binding enters the picture. I've had a fairly negative experience with data binding in the past (backbone, ugh, <em>knockout</em> double ugh) and I haven't used vue enough to say if it'll be any more positive.</p>
+<p>Actually, the very small amount of knockout I've used reminds me of vue in some ways. Custom attributes that express how certain things on an element should be bound to properties. Hmm.</p>
+<h2 id="performance">Performance</h2><p>React is fast in the simple case. It's not hard to write <em>terribly</em> performing react code though. Keeping things performing well requires a little bit of careful thought.</p>
+<p>Vue, via it's explicit binding, knows all of the things that might cause a component to re-render, so it can basically implement a smart <code>shouldComponentUpdate</code> for every component. That should make it generally faster in a large application, but I'm just theorising here.</p>
+<h2 id="composition">Composition</h2><p>We've all gotten (somewhat) used to the idea of presentational and container components in react as a Good Thing, even if we don't always actually follow the pattern. You can implement the same pattern in vue too, it has pure functional components, which enforce them being dumb presentation only components.</p>
+<p>The higher level patterns that exist in react for composition (compound components, render props, children as a function and so on) are more react-specific, but vue does have a concept similar to props.children in react called slots. I think you'd be able to implement compound components in quite similar way to react in vue.</p>
+<p>OK, actually the <a href="https://vuejs.org/v2/guide/components-slots.html#Named-Slots">named slots</a> look really interesting. That solves a bunch of the problems the patterns I mentioned before are aiming to solve. It's a bit odd, since the child component is still responsible for the <em>order</em> the slots are rendered in, which isn't the case with a compound component, but it's still a bit nicer than having to pass components in props.</p>
+<h2 id="styling">Styling</h2><p>React doesn't care how you style things. That means you end up with inline styles, styled components, style objects and more. Vue (seemingly) has one way to apply styles.</p>
+<p>In vue you use style tags, that look a lot like CSS modules. They can be scoped to a particular component or applied globally and live alongside the component. This pattern is actually very close to what I've settled on as my preferred way of styling react components, which is interesting. I've settled on CSS modules and keeping all of the styles with the component, using class names to handle styling changes based on props.</p>
+
+      ]]>
+    </content>
+  </entry>
+  
 
 </feed>
