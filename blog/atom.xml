@@ -5,12 +5,178 @@
   <link rel="alternate" type="text/html" href="https://alligatr.co.uk/blog"/>
   <link rel="self" type="application/atom+xml" href="https://alligatr.co.uk/blog/atom.xml"/>
   
-  <updated>2020-06-06T00:00:00Z</updated>
+  <updated>2020-06-24T00:00:00Z</updated>
   <id>https://alligatr.co.uk/blog</id>
   <author>
     <name>alligator</name>
   </author>
 
+  
+  <entry>
+    <title>k, z but smaller</title>
+    <link href="https://alligatr.co.uk/blog/k-z-but-smaller/" />
+    <id>https://alligatr.co.uk/blog/k-z-but-smaller/</id>
+    <updated>2020-06-24T00:00:00Z</updated>
+    <content type="html">
+      <![CDATA[
+      <p>Maybe you've heard of <a href="https://github.com/rupa/z">z</a> or <a href="https://github.com/ajeetdsouza/zoxide">zoxide</a>. These keep track of frequently visited directories and provide a command to jump to them. For example, if you often navigate to <code>/var/www</code>, <code>z www</code> will take you there from anywhere in the filesystem.</p>
+<p>While looking into zoxide, I saw the bash function in <a href="https://lobste.rs/s/gsivtu/zoxide_new_cd_command_written_rust_learns#c_p6woex">this comment</a> that does <em>almost</em> the same thing. I've had it in my bashrc ever since. Turns out all I needed was thirteen lines of bash; <a href="https://www.jwz.org/doc/worse-is-better.html">worse is better</a> rears its ugly head again.</p>
+<p>Here's the function:</p>
+<div class="hll"><pre><span></span>k<span class="o">()</span> <span class="o">{</span>
+    <span class="k">if</span> <span class="o">[</span> -z <span class="nv">$1</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
+        <span class="nb">echo</span> <span class="nv">$PWD</span> &gt;&gt; ~/.k
+    <span class="k">else</span>
+        <span class="nv">K</span><span class="o">=</span>~/.k
+        <span class="k">case</span> <span class="nv">$1</span> in
+        clean<span class="o">)</span>  sort <span class="nv">$K</span> <span class="p">|</span> uniq &gt; <span class="si">${</span><span class="nv">K</span><span class="si">}</span>.tmp <span class="o">&amp;&amp;</span> mv <span class="si">${</span><span class="nv">K</span><span class="si">}</span>.tmp <span class="si">${</span><span class="nv">K</span><span class="si">}</span><span class="p">;;</span>
+        rm<span class="o">)</span> sed -i -E <span class="s2">&quot;\#^</span><span class="si">${</span><span class="nv">PWD</span><span class="si">}</span><span class="s2">\$#d&quot;</span> <span class="si">${</span><span class="nv">K</span><span class="si">}</span><span class="p">;;</span>
+        ls<span class="o">)</span> cat <span class="si">${</span><span class="nv">K</span><span class="si">}</span><span class="p">;;</span>
+        *<span class="o">)</span>  <span class="nb">cd</span> <span class="s2">&quot;</span><span class="k">$(</span>grep -e <span class="s2">&quot;</span><span class="nv">$1</span><span class="s2">&quot;</span> <span class="si">${</span><span class="nv">K</span><span class="si">}</span> <span class="p">|</span> head -n <span class="m">1</span><span class="k">)</span><span class="s2">&quot;</span><span class="p">;;</span>
+        <span class="k">esac</span>
+    <span class="k">fi</span>
+<span class="o">}</span>
+</pre></div>
+<p>Used like so:</p>
+<pre><code>go to some directory
+  $ cd /var/www
+
+add it to the list
+  $ k
+
+go somewhere else
+  $ cd /
+
+go back to the saved directory
+  $ k www
+  $ pwd
+  /var/www
+
+show the saved directories
+  $ k ls
+  /var/www
+
+remove a saved directory
+  $ k rm /var/www
+</code></pre>
+<p>I only navigate to handful of directories regularly, so building the list myself over time is no big deal.</p>
+<p>For fun, here's a comparison of the lines of code in k, z and zoxide (as reported by cloc):</p>
+<table>
+<thead><tr>
+<th>tool</th>
+<th>loc</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>k</td>
+<td>13 (shell)</td>
+</tr>
+<tr>
+<td>z</td>
+<td>191 (shell)</td>
+</tr>
+<tr>
+<td>zoxide</td>
+<td>1093 (rust), 110 (shell)</td>
+</tr>
+</tbody>
+</table>
+
+      ]]>
+    </content>
+  </entry>
+  
+  <entry>
+    <title>lektor primer</title>
+    <link href="https://alligatr.co.uk/blog/lektor-primer/" />
+    <id>https://alligatr.co.uk/blog/lektor-primer/</id>
+    <updated>2020-06-19T00:00:00Z</updated>
+    <content type="html">
+      <![CDATA[
+      <p>I rarely see <a href="https://www.getlektor.com/">Lektor</a> come up in discussions about static site generators. I think that's a shame, since it's quite wonderful. Here, I aim to show you some of how Lektor works and why I like it.</p>
+<p>I'm going to assume you're familiar with what a static site generator does, why you might want to use one, and how they tend to work.</p>
+<p>At it's core, Lektor does the same job as other static site generators. That is, it takes files containing content, renders them into a template, and writes the resulting HTML to disk. Where it differs is the flexibility it offers. To demonstrate that I need to talk about three concepts: <strong>models</strong>, <strong>templates</strong>, and <strong>pages</strong>.</p>
+<h2 id="models">models</h2><p>Lektor makes no assumptions about the type of site you want to create and leaves it up to you to model it. The website you're currently reading is built as a single Lektor project and it serves as my personal site, project portfolio, blog, and online CV.</p>
+<p>A model defines the shape of your site's content. It contains a set of fields and various metadata about them. They are stored as <code>ini</code> files in the <code>models/</code> directory of a Lektor project.</p>
+<p>Here's a model for a blog post:</p>
+<div class="hll"><pre><span></span><span class="k">[model]</span>
+<span class="na">name</span> <span class="o">=</span> <span class="s">Blog Post</span>
+
+<span class="k">[fields.title]</span>
+<span class="na">label</span> <span class="o">=</span> <span class="s">Title</span>
+<span class="na">type</span> <span class="o">=</span> <span class="s">string</span>
+<span class="na">size</span> <span class="o">=</span> <span class="s">large</span>
+
+<span class="k">[fields.date]</span>
+<span class="na">label</span> <span class="o">=</span> <span class="s">Publication Date</span>
+<span class="na">type</span> <span class="o">=</span> <span class="s">date</span>
+<span class="na">width</span> <span class="o">=</span> <span class="s">1/2 </span>
+
+<span class="k">[fields.body]</span>
+<span class="na">label</span> <span class="o">=</span> <span class="s">Body</span>
+<span class="na">type</span> <span class="o">=</span> <span class="s">markdown</span>
+</pre></div>
+<p>Fields can have <a href="https://www.getlektor.com/docs/api/db/types/">various types</a>, but the ones above should be self explanatory.</p>
+<p>The model is identified by it's filename, so if the above file is named <code>blog-post.ini</code> then it's id is <code>blog-post</code>.</p>
+<p>Models can also have children, allowing you to create hierarchies. Here's a blog model than encapsulates all of our blog posts:</p>
+<div class="hll"><pre><span></span><span class="k">[model]</span>
+<span class="na">name</span> <span class="o">=</span> <span class="s">Blog</span>
+
+<span class="k">[children]</span>
+<span class="na">model</span> <span class="o">=</span> <span class="s">blog-post</span>
+<span class="na">order_by</span> <span class="o">=</span> <span class="s">date</span>
+</pre></div>
+<p>[talk about the web interface here]</p>
+<h2 id="pages">pages</h2><p>Content for a Lektor site goes into pages.</p>
+<p>One page corresponds to one directory within the <code>content/</code> directory. Each directory has a <code>contents.lr</code> file containing the data for that page. Any other files are considered attachments of the page and will be copied along with it when it is built. Pages can also be nested to create hierarchies.</p>
+<p>Here's an example structure for a blog:</p>
+<pre><code>content/
+  contents.lr
+  about/
+    contents.lr
+  blog/
+    contents.lr
+    first-post/
+      contents.lr
+      image.png
+    second-post/
+      contents.lr
+      attachment.mp3
+</code></pre>
+<p>This would give us the following pages:</p>
+<ul>
+<li><code>/</code> - an index page.</li>
+<li><code>/about</code> - an about page.</li>
+<li><code>/blog</code> - a blog index page.</li>
+<li><code>/blog/first-post</code> and <code>/blog/second-post</code> - pages for individual blog posts.</li>
+</ul>
+<p>Inside <code>content.lr</code> the data is given as a set of key value pairs separated by three dashes, like so:</p>
+<pre><code>_model: blog-post
+---
+title: my post
+---
+date: 2020-06-19
+---
+body:
+# it's me blog
+</code></pre>
+<p>As you may have guessed, the <code>_model</code> field defines the model to be used by this page.</p>
+<h2 id="templates">templates</h2><p>A template corresponds to an <code>html</code> file in the <code>templates/</code> directory.  When Lektor attempts to render a model, it will look for a template with the same filename as the model.</p>
+<p>These are written in the <a href="https://jinja.palletsprojects.com/en/2.11.x/">Jinja</a> templating language. Here's one for our blog post:</p>
+<div class="hll"><pre><span></span><span class="cp">{%</span> <span class="k">extends</span> <span class="s2">&quot;layout.html&quot;</span> <span class="cp">%}</span><span class="x"></span>
+<span class="cp">{%</span> <span class="k">block</span> <span class="nv">title</span> <span class="cp">%}{{</span> <span class="nv">this.title</span> <span class="cp">}}{%</span> <span class="k">endblock</span> <span class="cp">%}</span><span class="x"></span>
+<span class="cp">{%</span> <span class="k">block</span> <span class="nv">body</span> <span class="cp">%}</span><span class="x"></span>
+<span class="x">  &lt;h2&gt;</span><span class="cp">{{</span> <span class="nv">this.title</span> <span class="cp">}}</span><span class="x">&lt;/h2&gt;</span>
+<span class="x">  </span><span class="cp">{{</span> <span class="nv">this.date</span><span class="o">|</span><span class="nf">dateformat</span><span class="o">(</span><span class="s1">&#39;medium&#39;</span><span class="o">)</span> <span class="cp">}}</span><span class="x"></span>
+<span class="x">  &lt;div class=&quot;blog-post&quot;&gt;</span>
+<span class="x">    </span><span class="cp">{{</span> <span class="nv">this.body</span> <span class="cp">}}</span><span class="x"></span>
+<span class="x">  &lt;/div&gt;</span>
+<span class="cp">{%</span> <span class="k">endblock</span> <span class="cp">%}</span><span class="x"></span>
+</pre></div>
+
+      ]]>
+    </content>
+  </entry>
   
   <entry>
     <title>beyond the code element</title>
