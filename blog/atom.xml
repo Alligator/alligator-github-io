@@ -19,9 +19,8 @@
     <updated>2020-06-24T00:00:00Z</updated>
     <content type="html">
       <![CDATA[
-      <p>Maybe you've heard of <a href="https://github.com/rupa/z">z</a> or <a href="https://github.com/ajeetdsouza/zoxide">zoxide</a>. These keep track of frequently visited directories and provide a command to jump to them. For example, if you often navigate to <code>/var/www</code>, <code>z www</code> will take you there from anywhere in the filesystem.</p>
-<p>While looking into zoxide, I saw the bash function in <a href="https://lobste.rs/s/gsivtu/zoxide_new_cd_command_written_rust_learns#c_p6woex">this comment</a> that does <em>almost</em> the same thing. I've had it in my bashrc ever since. Turns out all I needed was thirteen lines of bash; <a href="https://www.jwz.org/doc/worse-is-better.html">worse is better</a> rears its ugly head again.</p>
-<p>Here's the function:</p>
+      <p>You may heard of <a href="https://github.com/rupa/z">z</a> or <a href="https://github.com/ajeetdsouza/zoxide">zoxide</a>. These tools keep track of frequently visited directories and provide a command to jump to them. For example, if you are often in <code>/var/www</code> then executing <code>z www</code> will take you there from any directory.</p>
+<p>I present a tiny shell script alternative to these, <code>k</code>:</p>
 <div class="hll"><pre><span></span>k<span class="o">()</span> <span class="o">{</span>
     <span class="k">if</span> <span class="o">[</span> -z <span class="nv">$1</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
         <span class="nb">echo</span> <span class="nv">$PWD</span> &gt;&gt; ~/.k
@@ -36,7 +35,8 @@
     <span class="k">fi</span>
 <span class="o">}</span>
 </pre></div>
-<p>Used like so:</p>
+<p>I can take no credit for this, I discovered it in <a href="https://lobste.rs/s/gsivtu/zoxide_new_cd_command_written_rust_learns#c_p6woex">this lobste.rs comment</a> and have had it in my bashrc ever since. Sometimes all you really need is thirteen lines of bash.</p>
+<p>It is used like so:</p>
 <pre><code>go to some directory
   $ cd /var/www
 
@@ -58,8 +58,8 @@ show the saved directories
 remove a saved directory
   $ k rm /var/www
 </code></pre>
-<p>I only navigate to handful of directories regularly, so building the list myself over time is no big deal.</p>
-<p>For fun, here's a comparison of the lines of code in k, z and zoxide (as reported by cloc):</p>
+<p>Saved directories are stored <code>~/.k</code>. This list must be built manually by running the <code>k</code> command in directories you want to save, but I didn't find this difficult. There's only a handful of directories I need quick access to.</p>
+<p>Finally, a comparison of the lines of code in k, z and zoxide (as reported by cloc):</p>
 <table>
 <thead><tr>
 <th>tool</th>
@@ -81,6 +81,7 @@ remove a saved directory
 </tr>
 </tbody>
 </table>
+<p>This isn't to disparage z and zoxide (especially z, it's quite marvellous for a few hundred lines of shell script), just a lighthearted reminder that <a href="https://www.jwz.org/doc/worse-is-better.html">worse can often be better</a>.</p>
 
       ]]>
     </content>
