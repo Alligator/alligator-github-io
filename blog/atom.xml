@@ -58,7 +58,7 @@ show the saved directories
 remove a saved directory
   $ k rm /var/www
 </code></pre>
-<p>Saved directories are stored <code>~/.k</code>. This list must be built manually by running the <code>k</code> command in directories you want to save, but I didn't find this difficult. There's only a handful of directories I need quick access to.</p>
+<p>Saved directories are stored in <code>~/.k</code>. This list must be built manually by running the <code>k</code> command in directories you want to save, but I didn't find this difficult. There's only a handful of directories I need quick access to.</p>
 <p>Finally, a comparison of the lines of code in k, z and zoxide (as reported by cloc):</p>
 <table>
 <thead><tr>
