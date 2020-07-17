@@ -19,7 +19,7 @@
     <updated>2020-06-24T00:00:00Z</updated>
     <content type="html">
       <![CDATA[
-      <p>You may heard of <a href="https://github.com/rupa/z">z</a> or <a href="https://github.com/ajeetdsouza/zoxide">zoxide</a>. These tools keep track of frequently visited directories and provide a command to jump to them. For example, if you are often in <code>/var/www</code> then executing <code>z www</code> will take you there from any directory.</p>
+      <p>You may have heard of <a href="https://github.com/rupa/z">z</a> or <a href="https://github.com/ajeetdsouza/zoxide">zoxide</a>. These tools keep track of frequently visited directories and provide a command to jump to them. For example, if you are often in <code>/var/www</code> then executing <code>z www</code> will take you there from any directory.</p>
 <p>I present a tiny shell script alternative to these, <code>k</code>:</p>
 <div class="hll"><pre><span></span>k<span class="o">()</span> <span class="o">{</span>
     <span class="k">if</span> <span class="o">[</span> -z <span class="nv">$1</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
