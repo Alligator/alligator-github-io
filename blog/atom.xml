@@ -35,7 +35,7 @@
     <span class="k">fi</span>
 <span class="o">}</span>
 </pre></div>
-<p>I've also created a fish version, available in <a href="https://gist.github.com/Alligator/11e5bb01c12c8ac8b74824d54d1ee560">this gist</a> along with the original.</p>
+<p>I've also created fish and (somewhat limited) batch script versions, available in <a href="https://gist.github.com/Alligator/11e5bb01c12c8ac8b74824d54d1ee560">this gist</a> along with the original.</p>
 <p>I can take no credit for this, I discovered it in <a href="https://lobste.rs/s/gsivtu/zoxide_new_cd_command_written_rust_learns#c_p6woex">this lobste.rs comment</a> and have had it in my bashrc ever since. Sometimes all you really need is thirteen lines of bash.</p>
 <p>It is used like so:</p>
 <pre><code>go to some directory

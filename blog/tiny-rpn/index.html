@@ -1,0 +1,70 @@
+<!doctype html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="../../static/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>A tiny RPN calculator</title>
+</head>
+<body>
+  <header>
+    
+<h1>
+  <a href="../../blog/">alligator's blog</a>
+</h1>
+
+  </header>
+  <div class="page">
+    
+<h2>A tiny RPN calculator</h2>
+Nov 14, 2013
+<div class="blog-post">
+  <p>I made a tweet sized rpn calculator, available
+<a href="http://pizza.alligatr.co.uk/rpn.html">here</a>. Here's the code with no
+formatting:</p>
+<div class="hll"><pre><span></span><span class="kd">function</span> <span class="nx">rpn</span><span class="p">(</span><span class="nx">t</span><span class="p">,</span><span class="nx">s</span><span class="p">){</span><span class="k">for</span><span class="p">(</span><span class="nx">s</span><span class="o">=</span><span class="p">[],</span><span class="nx">t</span><span class="o">=</span><span class="nx">t</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">),</span><span class="nx">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="nx">c</span><span class="o">=</span><span class="nx">t</span><span class="p">[</span><span class="nx">i</span><span class="o">++</span><span class="p">];)</span><span class="nx">s</span><span class="p">.</span><span class="nx">push</span><span class="p">((</span><span class="nx">n</span><span class="o">=</span><span class="nb">parseFloat</span><span class="p">(</span><span class="nx">c</span><span class="p">))</span><span class="o">?</span><span class="nx">n</span><span class="o">:</span><span class="nb">eval</span><span class="p">(</span><span class="nx">s</span><span class="p">.</span><span class="nx">splice</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="nx">c</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="nx">s</span><span class="p">.</span><span class="nx">pop</span><span class="p">()));</span><span class="k">return</span> <span class="nx">s</span><span class="p">;}</span>
+</pre></div>
+<p>Here's a breakdown of the code:</p>
+<pre><code>function rpn(t,s){
+</code></pre>
+<p>Nothing much to see here. <code>t</code> is the input string and <code>s</code> is the stack,
+defined here for reasons shown later.</p>
+<pre><code>for(s=[],t=t.split(' '),i=0;c=t[i++];)
+</code></pre>
+<p>This is the main loop, <code>s</code> is initialised and <code>t</code> is split into tokens.
+The tokens are iterated over and the current token is stored in <code>c</code>. This
+loop works because in javascript strings are &lsquo;truthy&rsquo;, so the
+loop will continue until c becomes undefined (which happens when i is larger
+than the length of the token list.)</p>
+<p>As an aside, note that the value of &lsquo;<code>a = 12</code>&rsquo; is <code>12</code> and the
+value of &lsquo;<code>var a = 12</code>&rsquo; is <code>undefined</code>. This is what allows
+&lsquo;<code>c=t[i++]</code>&rsquo; to work.</p>
+<pre><code>s.push(...);
+</code></pre>
+<p>Something is always pushed to the stack, either a result or a new value.</p>
+<pre><code>(n=parseFloat(c))`&lt;br /&gt;`?n:`&lt;br /&gt;`eval(s.splice(-2,1)[0]+c[0]+s.pop())
+</code></pre>
+<p>First, try and parse a float from the token, if this worked push it to
+the stack and continue the loop. Otherwise, <code>eval</code> the second topmost value
+on the stack, plus the first character of the current token, plus the
+topmost value on the stack and push the result to the stack.
+This means if the stack is <code>[1, 2]</code> and the current operator is <code>+</code> we run
+&lsquo;<code>eval('1+2')</code>&rsquo;.</p>
+<pre><code>return s;}
+</code></pre>
+<p>Return the stack. This is why s needed to be defined as an argument to the
+function. If it was defined in the loop like our other variables it wouldn't
+be avilable here.</p>
+<p>There you have it, a tiny rpn calculator that's not very safe.</p>
+
+</div>
+<a href="../../blog/">blog index</a>
+
+  </div>
+  <footer>
+    <p>
+      &copy; 2020 Reece Selwood.
+      <br />
+      This site was made using <a href="https://www.getlektor.com/">Lektor</a>. It's good.
+    </p>
+  </footer>
+</body>
