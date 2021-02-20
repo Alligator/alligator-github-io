@@ -5,12 +5,48 @@
   <link rel="alternate" type="text/html" href="https://alligatr.co.uk/blog"/>
   <link rel="self" type="application/atom+xml" href="https://alligatr.co.uk/blog/atom.xml"/>
   
-  <updated>2020-06-24T00:00:00Z</updated>
+  <updated>2021-02-20T00:00:00Z</updated>
   <id>https://alligatr.co.uk/blog</id>
   <author>
     <name>alligator</name>
   </author>
 
+  
+  <entry>
+    <title>termbox-janet</title>
+    <link href="https://alligatr.co.uk/blog/termbox-janet/" />
+    <id>https://alligatr.co.uk/blog/termbox-janet/</id>
+    <updated>2021-02-20T00:00:00Z</updated>
+    <content type="html">
+      <![CDATA[
+      <p>I've written some termbox bindings for Janet. If you don't know what either of those are, <a href="https://github.com/termbox/termbox">termbox</a> is a small library for building text-based user interfaces, and <a href="https://janet-lang.org">Janet</a> is a pragmatic lisp-like programming language with good native C code interoperability.</p>
+<p>You can find them at <a href="https://github.com/alligator/termbox-janet">termbox-janet</a>.</p>
+<p>They are essentially complete, bar a couple of functions I haven't found much use for.</p>
+<p>Here's a minimal example:</p>
+<div class="hll"><pre><span></span><span class="p">(</span><span class="kn">import</span> <span class="nn">termbox</span> <span class="p">:</span><span class="k">as</span> <span class="n">tb</span><span class="p">)</span>
+
+<span class="p">(</span><span class="n">tb</span><span class="o">/</span><span class="n">init</span><span class="p">)</span>
+
+<span class="p">(</span><span class="n">tb</span><span class="o">/</span><span class="n">put</span><span class="o">-</span><span class="n">string</span> <span class="mi">1</span> <span class="mi">1</span> <span class="s2">&quot;hello, world&quot;</span><span class="p">)</span>
+<span class="p">(</span><span class="n">tb</span><span class="o">/</span><span class="n">present</span><span class="p">)</span>
+
+<span class="c1"># block until an event happens</span>
+<span class="p">(</span><span class="n">tb</span><span class="o">/</span><span class="n">poll</span><span class="o">-</span><span class="n">event</span><span class="p">)</span>
+
+<span class="p">(</span><span class="n">tb</span><span class="o">/</span><span class="n">shutdown</span><span class="p">)</span>
+</pre></div>
+<p>More examples are in the test directory of the repo <a href="https://github.com/Alligator/termbox-janet/tree/main/test">here</a>.</p>
+<p>Writing bindings for Janet is a delight. The documentation could do with some work, but plenty of native modules are on GitHub to look through. The API provides lots of useful functions and I can usually express what I want in at most a couple of calls.</p>
+<p>Some useful examples:</p>
+<p><a href="https://github.com/janet-lang/sqlite3">sqlite3</a>
+<br />
+<a href="https://github.com/janet-lang/circlet">circlet</a> - example of a Janet module embedded in a native one.
+<br />
+<a href="https://github.com/andrewchambers/janet-uri">janet-uri</a> - example of a native module re-exported from a Janet one.</p>
+
+      ]]>
+    </content>
+  </entry>
   
   <entry>
     <title>k, z but smaller</title>
@@ -26,7 +62,7 @@
         <span class="nb">echo</span> <span class="nv">$PWD</span> &gt;&gt; ~/.k
     <span class="k">else</span>
         <span class="nv">K</span><span class="o">=</span>~/.k
-        <span class="k">case</span> <span class="nv">$1</span> in
+        <span class="k">case</span> <span class="nv">$1</span> <span class="k">in</span>
         clean<span class="o">)</span>  sort <span class="nv">$K</span> <span class="p">|</span> uniq &gt; <span class="si">${</span><span class="nv">K</span><span class="si">}</span>.tmp <span class="o">&amp;&amp;</span> mv <span class="si">${</span><span class="nv">K</span><span class="si">}</span>.tmp <span class="si">${</span><span class="nv">K</span><span class="si">}</span><span class="p">;;</span>
         rm<span class="o">)</span> sed -i -E <span class="s2">&quot;\#^</span><span class="si">${</span><span class="nv">PWD</span><span class="si">}</span><span class="s2">\$#d&quot;</span> <span class="si">${</span><span class="nv">K</span><span class="si">}</span><span class="p">;;</span>
         ls<span class="o">)</span> cat <span class="si">${</span><span class="nv">K</span><span class="si">}</span><span class="p">;;</span>

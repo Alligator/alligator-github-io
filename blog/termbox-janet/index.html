@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="../../static/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>termbox-janet - alligator's blog</title>
+</head>
+<body>
+  <header>
+    
+<h1>
+  <a href="../../blog/">alligator's blog</a>
+</h1>
+
+  </header>
+  <div class="page">
+    
+<h2>termbox-janet</h2>
+Feb 20, 2021
+<div class="blog-post">
+
+  
+
+  <p>I've written some termbox bindings for Janet. If you don't know what either of those are, <a href="https://github.com/termbox/termbox">termbox</a> is a small library for building text-based user interfaces, and <a href="https://janet-lang.org">Janet</a> is a pragmatic lisp-like programming language with good native C code interoperability.</p>
+<p>You can find them at <a href="https://github.com/alligator/termbox-janet">termbox-janet</a>.</p>
+<p>They are essentially complete, bar a couple of functions I haven't found much use for.</p>
+<p>Here's a minimal example:</p>
+<div class="hll"><pre><span></span><span class="p">(</span><span class="kn">import</span> <span class="nn">termbox</span> <span class="p">:</span><span class="k">as</span> <span class="n">tb</span><span class="p">)</span>
+
+<span class="p">(</span><span class="n">tb</span><span class="o">/</span><span class="n">init</span><span class="p">)</span>
+
+<span class="p">(</span><span class="n">tb</span><span class="o">/</span><span class="n">put</span><span class="o">-</span><span class="n">string</span> <span class="mi">1</span> <span class="mi">1</span> <span class="s2">&quot;hello, world&quot;</span><span class="p">)</span>
+<span class="p">(</span><span class="n">tb</span><span class="o">/</span><span class="n">present</span><span class="p">)</span>
+
+<span class="c1"># block until an event happens</span>
+<span class="p">(</span><span class="n">tb</span><span class="o">/</span><span class="n">poll</span><span class="o">-</span><span class="n">event</span><span class="p">)</span>
+
+<span class="p">(</span><span class="n">tb</span><span class="o">/</span><span class="n">shutdown</span><span class="p">)</span>
+</pre></div>
+<p>More examples are in the test directory of the repo <a href="https://github.com/Alligator/termbox-janet/tree/main/test">here</a>.</p>
+<p>Writing bindings for Janet is a delight. The documentation could do with some work, but plenty of native modules are on GitHub to look through. The API provides lots of useful functions and I can usually express what I want in at most a couple of calls.</p>
+<p>Some useful examples:</p>
+<p><a href="https://github.com/janet-lang/sqlite3">sqlite3</a>
+<br />
+<a href="https://github.com/janet-lang/circlet">circlet</a> - example of a Janet module embedded in a native one.
+<br />
+<a href="https://github.com/andrewchambers/janet-uri">janet-uri</a> - example of a native module re-exported from a Janet one.</p>
+
+</div>
+<p>
+  <a href="../../blog/">blog index</a>
+</p>
+
+  </div>
+</body>
+</html>
