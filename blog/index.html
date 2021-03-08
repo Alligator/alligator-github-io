@@ -68,6 +68,24 @@
 
   <h2>microblog</h2>
   <div>
+  Mar 8, 2021
+  <br />
+  <p>A friend showed me an interesting feature of <a href="https://github.com/kdl-org/kdl#comments">this language</a>, comments that remove the next syntactic element.</p>
+<p>I thought this was a cool idea so I implemented it in <a href="https://github.com/Alligator/elysp">my toy lisp</a>. <code>#-</code> comments out the next element, so multi-line function definitions can be removed with one comment:</p>
+<pre><code>#- (def add-two (x)
+  (+ x 1))
+</code></pre>
+<p>or single list items can be removed inline:</p>
+<pre><code>(+ 1 #- 2 3)
+becomes
+(+ 1 3)
+</code></pre>
+<p>More langauges need this thing.</p>
+
+</div>
+<hr />
+
+<div>
   Mar 4, 2021
   <br />
   <p>I'm working on <a href="https://github.com/Alligator/seam-carving">my seam carving library</a>. I had a brainwave yesterday about making it faster and four hours later it's... 10x slower and looks much worse. Bugger.</p>
