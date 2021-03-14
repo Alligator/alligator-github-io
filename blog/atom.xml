@@ -5,12 +5,94 @@
   <link rel="alternate" type="text/html" href="https://alligatr.co.uk/blog"/>
   <link rel="self" type="application/atom+xml" href="https://alligatr.co.uk/blog/atom.xml"/>
   
-  <updated>2021-02-20T00:00:00Z</updated>
+  <updated>2021-03-13T00:00:00Z</updated>
   <id>https://alligatr.co.uk/blog</id>
   <author>
     <name>alligator</name>
   </author>
 
+  
+  <entry>
+    <title>narrowing discriminated unions in typescript</title>
+    <link href="https://alligatr.co.uk/blog/narrowing-discriminated-unions-in-typescript/" />
+    <id>https://alligatr.co.uk/blog/narrowing-discriminated-unions-in-typescript/</id>
+    <updated>2021-03-13T00:00:00Z</updated>
+    <content type="html">
+      <![CDATA[
+      <style>
+mark {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+</style><p>Here is a solution to a problem I've had a few times in TypeScript. I have a discriminated union:</p>
+<div class="hll"><pre><span></span><span class="kd">enum</span> <span class="nx">ObjKind</span> <span class="p">{</span>
+  <span class="nb">String</span><span class="p">,</span>
+  <span class="nb">Number</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="kd">type</span> <span class="nx">ObjString</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">kind</span>: <span class="kt">ObjKind.String</span><span class="p">;</span>
+  <span class="nx">str</span>: <span class="kt">string</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">type</span> <span class="nx">ObjNumber</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">kind</span>: <span class="kt">ObjKind.Number</span><span class="p">;</span>
+  <span class="nx">num</span>: <span class="kt">number</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">type</span> <span class="nx">Obj</span> <span class="o">=</span> <span class="nx">ObjString</span> <span class="o">|</span> <span class="nx">ObjNumber</span><span class="p">;</span>
+</pre></div>
+<p>and I want a function <code>checkObj</code> that, if called like this:</p>
+<div class="hll"><pre><span></span><span class="kd">const</span> <span class="nx">someObj1</span>: <span class="kt">Obj</span> <span class="o">=</span> <span class="p">...;</span>
+<span class="kd">const</span> <span class="nx">someObj2</span>: <span class="kt">Obj</span> <span class="o">=</span> <span class="p">...;</span>
+<span class="kd">const</span> <span class="nx">str</span> <span class="o">=</span> <span class="nx">checkObj</span><span class="p">(</span><span class="nx">someObj1</span><span class="p">,</span> <span class="nx">ObjKind</span><span class="p">.</span><span class="nb">String</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">num</span> <span class="o">=</span> <span class="nx">checkObj</span><span class="p">(</span><span class="nx">someObj2</span><span class="p">,</span> <span class="nx">ObjKind</span><span class="p">.</span><span class="nb">Number</span><span class="p">);</span>
+</pre></div>
+<p>returns the correct type from the union. That is, I want <code>str</code> to be an <code>ObjString</code> and <code>num</code> to be an <code>ObjNumber</code>.</p>
+<h2 id="the-first-attempt">the first attempt</h2><p>This version of <code>checkObj</code> does <strong>not</strong> do this, but we'll build on it:</p>
+<div class="hll"><pre><span></span><span class="kd">function</span> <span class="nx">checkObj</span><span class="p">(</span><span class="nx">obj</span>: <span class="kt">Obj</span><span class="p">,</span> <span class="nx">kind</span>: <span class="kt">ObjKind</span><span class="p">)</span><span class="o">:</span> <span class="nx">Obj</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">obj</span><span class="p">.</span><span class="nx">kind</span> <span class="o">!==</span> <span class="nx">kind</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;type mismatch!&#39;</span><span class="p">);</span>
+  <span class="p">}</span>
+  <span class="k">return</span> <span class="nx">obj</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+<p>This checks the type, but returns an <code>Obj</code>. To get the correct type, the caller needs to add a type assertion:</p>
+<div class="hll"><pre><span></span><span class="kd">const</span> <span class="nx">str</span> <span class="o">=</span> <span class="nx">checkObj</span><span class="p">(</span><span class="nx">someObj</span><span class="p">,</span> <span class="nx">ObjKind</span><span class="p">.</span><span class="nb">String</span><span class="p">)</span> <span class="kr">as</span> <span class="nx">ObjString</span><span class="p">;</span>
+</pre></div>
+<p>That relies on manually matching the <code>ObjKind</code> to the assertion, how do we get the type checker to do this for us?</p>
+<h2 id="the-solution">the solution</h2><p>To do this, we need to change the signature of the function. First we move <code>ObjKind</code> into a type parameter:</p>
+<pre>
+function checkObj<mark>&lt;K extends ObjKind&gt;</mark>(
+  obj: Obj,
+  <mark>kind: K</mark>,
+)
+</pre><p>This allows us to use it in the return type, which becomes this:</p>
+<pre>
+function checkObj&lt;K extends ObjKind&gt;(
+  obj: Obj,
+  kind: K,
+): <mark>Extract&lt;Obj, { kind: K }&gt;</mark> {
+</pre><p><a href="https://www.typescriptlang.org/docs/handbook/utility-types.html#extracttype-union">Extract</a> is a utility type that will get a type from a union that can be assigned to another type. We give it <code>Obj</code>, the union we want to extract a type from, and <code>{ kind: K }</code>, the type we want to extract. This will give us any type in the union where the kind parameter is set to K.</p>
+<p>All that's left to do is add a type assertion on the return value and we're done:</p>
+<pre>
+return obj <mark>as Extract&lt;Obj, { kind: K }&gt;</mark>;
+</pre><p>Here's the finished function:</p>
+<div class="hll"><pre><span></span><span class="kd">function</span> <span class="nx">checkObj</span><span class="o">&lt;</span><span class="nx">K</span> <span class="k">extends</span> <span class="nx">ObjKind</span><span class="o">&gt;</span><span class="p">(</span>
+  <span class="nx">obj</span>: <span class="kt">Obj</span><span class="p">,</span>
+  <span class="nx">kind</span>: <span class="kt">K</span><span class="p">,</span>
+<span class="p">)</span><span class="o">:</span> <span class="nx">Extract</span><span class="o">&lt;</span><span class="nx">Obj</span><span class="p">,</span> <span class="p">{</span> <span class="nx">kind</span>: <span class="kt">K</span> <span class="p">}</span><span class="o">&gt;</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">obj</span><span class="p">.</span><span class="nx">kind</span> <span class="o">!==</span> <span class="nx">kind</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;type mismatch!&#39;</span><span class="p">);</span>
+  <span class="p">}</span>
+  <span class="k">return</span> <span class="nx">obj</span> <span class="kr">as</span> <span class="nx">Extract</span><span class="o">&lt;</span><span class="nx">Obj</span><span class="p">,</span> <span class="p">{</span> <span class="nx">kind</span>: <span class="kt">K</span> <span class="p">}</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+<p>Hope that helps someone. Usually when I see types like this in TypeScript my eyes glaze over, but it was worth persisting a little to make more use of the type checker.</p>
+
+      ]]>
+    </content>
+  </entry>
   
   <entry>
     <title>termbox-janet</title>
