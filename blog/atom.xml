@@ -5,12 +5,43 @@
   <link rel="alternate" type="text/html" href="https://alligatr.co.uk/blog"/>
   <link rel="self" type="application/atom+xml" href="https://alligatr.co.uk/blog/atom.xml"/>
   
-  <updated>2021-03-13T00:00:00Z</updated>
+  <updated>2021-04-02T00:00:00Z</updated>
   <id>https://alligatr.co.uk/blog</id>
   <author>
     <name>alligator</name>
   </author>
 
+  
+  <entry>
+    <title>Obsidian and approaching notes like code</title>
+    <link href="https://alligatr.co.uk/blog/obsidian-and-approaching-notes-like-code/" />
+    <id>https://alligatr.co.uk/blog/obsidian-and-approaching-notes-like-code/</id>
+    <updated>2021-04-02T00:00:00Z</updated>
+    <content type="html">
+      <![CDATA[
+      <p>Over time source code grows larger than can be held in one person's head. When that happens, we rely less on hierarchies like files and folders and instead navigate via connections between files. We use tools provided by the editor or IDE<sup class="footnote-ref" id="fnref-ed"><a href="#fn-ed">1</a></sup> to jump from invocations to declarations, variables to types among others.</p>
+<p>I use <a href="https://obsidian.md/">Obsidian</a> for note-taking and it dawned on me that this connection based navigation is its exact approach to notes. It's like an IDE for notes.</p>
+<h2 id="navigating-via-connections">Navigating via connections</h2><p>Obsidian, like code editors and IDEs, has tools to jump around via explicit and implicit connections. In editors we have <strong>go to definition</strong>, <strong>go to type definition</strong> and <strong>find references</strong> among others. In Obsidian we have <strong>links</strong>, <strong>linked mentions</strong> and <strong>unlinked mentions</strong>.</p>
+<blockquote><p>Following a link is like go to definition. It follows a direct connection from one note to another.</p>
+<p>Following a linked mention is like find references. It finds other notes that reference the current one.</p>
+<p>Following unlinked mentions don't have a direct analogue, but is also like find all references. It finds notes that mention the current note's name without explicitly linking to it.</p>
+</blockquote>
+<p>Links are direct connections from the current note to others. Following a link is like using go to definition.</p>
+<p>Linked mentions are direct connections from other notes to the current one, they are the inverse of links. Following a linked mentioned is like using find references.</p>
+<p>Unlinked mentions are instances of other notes mentioning the name of the current note, without using a link. They don't have a direct analogue to a code editor feature, but are a variation of find references.</p>
+<p>These tools find connections we didn't know were there. In code it might be from display logic to business logic to the database. In Obsidian it might be from a newly created note to existing notes via unlinked mentions. The connections aren't obvious from the hierarchy of files and folders, they emerge as we navigate around.</p>
+<h2 id="user-interface">User Interface</h2><p>In a recent episode of <a href="https://www.relay.fm/cortex/">Cortex</a> one of the hosts, Myke, said Obsidian's UI looks like nothing he's ever seen. This surprised me, as it looks a lot like the current crop of GUI based code editors (VS Code, Sublime, Atom). If you're not a programmer that style of UI would be alien to you.</p>
+<p>Obsidian borrows common features from these editors and puts them in a different context. Fuzzy file name matching, a command palette, fast and expression global search, a plugin ecosystem, tabbed and split windows to name a few.</p>
+<p>A plethora of useful features are confined to code editors, I wonder what other good ideas are waiting to be applied to note-taking. Static analysis to find deep connections? Navigation with fuzzy matching to specific types of content like headings, paragraphs and quotes? LSP support for English? ...Maybe skip that last one.</p>
+<div class="footnotes">
+<hr>
+<ol><li id="fn-ed"><p>Even if you use an editor without these features, you probably still use these concepts and do the navigation manually.<a href="#fnref-ed" class="footnote">&#8617;</a></p></li>
+</ol>
+</div>
+
+      ]]>
+    </content>
+  </entry>
   
   <entry>
     <title>narrowing discriminated unions in typescript</title>
