@@ -10,7 +10,7 @@
   <header>
     
 <h1>
-  <a href="../../blog/">alligator's blog</a>
+  <a href="../">alligator's blog</a>
 </h1>
 
   </header>
@@ -26,7 +26,7 @@ Apr 13, 2021
 td { text-align: right; }
 </style><p>Seam carving is a content-aware image resizing algorithm, and I've been working on a <a href="https://github.com/Alligator/seam-carving/tree/main">JavaScript implementation of it</a>. It's as fast an I can make it while still using a naïve algorithm. Well as fast as I can make it for now anyway.</p>
 <p>Here's some sample output, the original is on the left, the resized version is on the right:</p>
-<p><img src="../../blog/fast-content-aware-resizing-in-javascript/seam-carving-example.jpg" alt=""></p>
+<p><img src="seam-carving-example.jpg" alt=""></p>
 <p>This article is about optimising the code, so I won't go into how seam carving works. If you want to read about it <a href="https://en.wikipedia.org/wiki/Seam_carving">the wikipedia page</a> does a good enough job.</p>
 <h2 id="seam-carving-js">seam-carving-js</h2><p>I didn't set out to write a seam carving library, I only wanted to use one. I run a discord bot that (among other things) lets users manipulate images, and I wanted a content-aware resize command. It's written in JavaScript and uses node-canvas to manipulate images, so I found <a href="https://github.com/mfbx9da4/seam-carving-js">seam-carving-js</a>, which is also written in JavaScript and works with canvases.</p>
 <p>It does the job, but it's slow and memory hungry. My bot runs on a VPS with a gig of memory, and eating up half a gig to process one image causes a lot of thrashing. I attempted <a href="https://github.com/Alligator/seam-carving-js/commit/05c4c87befa57dfe5a87de008ccc1fff39468118">a hack</a> to help the memory usage, but it didn't do much.</p>
@@ -117,7 +117,7 @@ td { text-align: right; }
 </tbody>
 </table>
 <p>I think this might be TurboFan optimising the small functions sooner than it would optimise the big main function. Or perhaps it can be more selective with what it optimises, rather than doing the whole thing.</p>
-<h2 id="array.copywithin">Array.copyWithin</h2><p>Once the algorithm has decided which seam to get rid of, those pixels need to be removed, one per row in the image. I do this in place in the array of pixels and every time one is removed the rest of the array needs to shuffle along to close that the. I originally did this using a loop that copies each pixel to it's new location, skipping removed ones.</p>
+<h2 id="array.copyWithin">Array.copyWithin</h2><p>Once the algorithm has decided which seam to get rid of, those pixels need to be removed, one per row in the image. I do this in place in the array of pixels and every time one is removed the rest of the array needs to shuffle along to close that the. I originally did this using a loop that copies each pixel to it's new location, skipping removed ones.</p>
 <p>After running out of ideas and staring at the TypedArray docs on MDN, I found <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/copyWithin">Array.copyWithin</a>. It's like <code>memmove()</code> and lets you shift data around in an array. Using that, I avoid looping over every pixel and instead only loop over every row, copying the left half of the row, skipping the removed pixel, then copying the right half.</p>
 <p>I <a href="https://github.com/Alligator/seam-carving/commit/435e8f87ef825ca0b3365eecb715af97997fbc29">changed</a> two <a href="https://github.com/Alligator/seam-carving/commit/02001c02dcf7012938f888d235cc84db63d8b1f1">loops</a> to use copyWithin. It made quite a difference:</p>
 <table>
@@ -219,7 +219,7 @@ td { text-align: right; }
 
 </div>
 <p>
-  <a href="../../blog/">blog index</a>
+  <a href="../">blog index</a>
 </p>
 
   </div>
