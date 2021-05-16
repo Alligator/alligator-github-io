@@ -103,4 +103,11 @@ ul {
     .cv header .name {
         font-size: 16pt;
     }
+    .noprint {
+        display: none;
+    }
+    a {
+        color: black;
+        text-decoration: none;
+    }
 }
