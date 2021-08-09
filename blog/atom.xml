@@ -5,12 +5,57 @@
   <link rel="alternate" type="text/html" href="https://alligatr.co.uk/blog"/>
   <link rel="self" type="application/atom+xml" href="https://alligatr.co.uk/blog/atom.xml"/>
   
-  <updated>2021-04-13T00:00:00Z</updated>
+  <updated>2021-08-09T00:00:00Z</updated>
   <id>https://alligatr.co.uk/blog</id>
   <author>
     <name>alligator</name>
   </author>
 
+  
+  <entry>
+    <title>Suspicious optional chaining</title>
+    <link href="https://alligatr.co.uk/blog/suspicious-optional-chaining/" />
+    <id>https://alligatr.co.uk/blog/suspicious-optional-chaining/</id>
+    <updated>2021-08-09T00:00:00Z</updated>
+    <content type="html">
+      <![CDATA[
+      <p>I'm seeing a worrying pattern in TypeScript code in my day job: suspicious optional chaining. Consider this code that returns a user's name:</p>
+<div class="hll"><pre><span></span><span class="kd">function</span> <span class="nx">getName</span><span class="p">(</span><span class="nx">userId</span>: <span class="kt">number</span><span class="p">)</span><span class="o">:</span> <span class="kt">string</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="nx">fetchUser</span><span class="p">(</span><span class="nx">userId</span><span class="p">);</span>
+  <span class="k">return</span> <span class="nx">response</span><span class="o">?</span><span class="p">.</span><span class="nx">user</span><span class="o">?</span><span class="p">.</span><span class="nx">name</span> <span class="o">??</span> <span class="s1">&#39;Anonymous&#39;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+<p>This code seems very suspicious of it's data. Is the result from <code>fetchUser</code> really that untrustworthy, or did the developer use optional chaining every time <em>just in case</em>? We have no way of knowing without more information.</p>
+<p>Also, every optional chaining operator adds an implicit conditional, and this code has one answer to every else branch: return <code>'Anonymous'</code>. Is that always the correct behaviour? What if <code>response</code> is null, what if <code>user</code> is null? Again we have no way of knowing for sure.</p>
+<p>This suspicious code has become… suspicious.</p>
+<p>Let's rewrite this without optional chaining, starting with the first optional chaining operator.</p>
+<div class="hll"><pre><span></span><span class="kd">function</span> <span class="nx">getName</span><span class="p">(</span><span class="nx">userId</span>: <span class="kt">number</span><span class="p">)</span><span class="o">:</span> <span class="kt">string</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="nx">fetchUser</span><span class="p">(</span><span class="nx">userId</span><span class="p">);</span>
+
+  <span class="k">if</span> <span class="p">(</span><span class="nx">response</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">response</span><span class="p">.</span><span class="nx">user</span><span class="o">?</span><span class="p">.</span><span class="nx">name</span> <span class="o">??</span> <span class="s1">&#39;Anonymous&#39;</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+<p>What should we do if that condition isn't true? Is <code>response</code> ever falsy? We need to look at <code>fetchUser</code> to know. Let's say we do and it always returns a response, but if the user wasn't found the <code>user</code> property is null. We can adjust our condition to check for this.</p>
+<p>What about <code>name</code>? Do users always have a name? Let's say we check the API documentation and users can be anonymous, in which case their name is null. This confirms that <code>name</code> is always present but, if it's null, returning <code>'Anonymous'</code> is the correct behaviour.</p>
+<p>Armed with this information we can write this:</p>
+<div class="hll"><pre><span></span><span class="kd">function</span> <span class="nx">getName</span><span class="p">(</span><span class="nx">userId</span>: <span class="kt">number</span><span class="p">)</span><span class="o">:</span> <span class="kt">string</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="nx">fetchUser</span><span class="p">(</span><span class="nx">userId</span><span class="p">);</span>
+
+  <span class="k">if</span> <span class="p">(</span><span class="nx">response</span><span class="p">.</span><span class="nx">user</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">response</span><span class="p">.</span><span class="nx">user</span><span class="p">.</span><span class="nx">name</span> <span class="o">??</span> <span class="s1">&#39;Anonymous&#39;</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;User not found&#39;</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+<p>This code is more in control of it's data. It knows which conditions need to be checked. We didn't set out to write code that does this, but were led to do so by removing the conditional chaining operators.</p>
+<p>Defaulting to conditional chaining “just in case” makes the code worse, both when it's written and later when it's read. For dynamic or user supplied data it can be useful, but with a well defined data model, it obscures details and puts a burden on the next developer to re-discover those details. Be kind to the next person who has to read your code, and optionally chain responsibly.</p>
+
+      ]]>
+    </content>
+  </entry>
   
   <entry>
     <title>Fast content aware resizing in JavaScript</title>
@@ -23,7 +68,7 @@
 td { text-align: right; }
 </style><p>Seam carving is a content-aware image resizing algorithm, and I've been working on a <a href="https://github.com/Alligator/seam-carving/tree/main">JavaScript implementation of it</a>. It's as fast an I can make it while still using a naïve algorithm. Well as fast as I can make it for now anyway.</p>
 <p>Here's some sample output, the original is on the left, the resized version is on the right:</p>
-<p><img src="fast-content-aware-resizing-in-javascript/seam-carving-example.jpg" alt=""></p>
+<p><img src="../../blog/fast-content-aware-resizing-in-javascript/seam-carving-example.jpg" alt=""></p>
 <p>This article is about optimising the code, so I won't go into how seam carving works. If you want to read about it <a href="https://en.wikipedia.org/wiki/Seam_carving">the wikipedia page</a> does a good enough job.</p>
 <h2 id="seam-carving-js">seam-carving-js</h2><p>I didn't set out to write a seam carving library, I only wanted to use one. I run a discord bot that (among other things) lets users manipulate images, and I wanted a content-aware resize command. It's written in JavaScript and uses node-canvas to manipulate images, so I found <a href="https://github.com/mfbx9da4/seam-carving-js">seam-carving-js</a>, which is also written in JavaScript and works with canvases.</p>
 <p>It does the job, but it's slow and memory hungry. My bot runs on a VPS with a gig of memory, and eating up half a gig to process one image causes a lot of thrashing. I attempted <a href="https://github.com/Alligator/seam-carving-js/commit/05c4c87befa57dfe5a87de008ccc1fff39468118">a hack</a> to help the memory usage, but it didn't do much.</p>
@@ -114,7 +159,7 @@ td { text-align: right; }
 </tbody>
 </table>
 <p>I think this might be TurboFan optimising the small functions sooner than it would optimise the big main function. Or perhaps it can be more selective with what it optimises, rather than doing the whole thing.</p>
-<h2 id="array.copyWithin">Array.copyWithin</h2><p>Once the algorithm has decided which seam to get rid of, those pixels need to be removed, one per row in the image. I do this in place in the array of pixels and every time one is removed the rest of the array needs to shuffle along to close the gap. I originally did this using a loop that copies each pixel to it's new location, skipping removed ones.</p>
+<h2 id="array.copywithin">Array.copyWithin</h2><p>Once the algorithm has decided which seam to get rid of, those pixels need to be removed, one per row in the image. I do this in place in the array of pixels and every time one is removed the rest of the array needs to shuffle along to close the gap. I originally did this using a loop that copies each pixel to it's new location, skipping removed ones.</p>
 <p>After running out of ideas and staring at the TypedArray docs on MDN, I found <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/copyWithin">Array.copyWithin</a>. It's like <code>memmove()</code> and lets you shift data around in an array. Using that, I avoid looping over every pixel and instead only loop over every row, copying the left half of the row, skipping the removed pixel, then copying the right half.</p>
 <p>I <a href="https://github.com/Alligator/seam-carving/commit/435e8f87ef825ca0b3365eecb715af97997fbc29">changed</a> two <a href="https://github.com/Alligator/seam-carving/commit/02001c02dcf7012938f888d235cc84db63d8b1f1">loops</a> to use copyWithin. It made quite a difference:</p>
 <table>
@@ -637,7 +682,7 @@ all of it is necessary.</p>
     <content type="html">
       <![CDATA[
       <p>A PSA for anyone who runs <code>ls</code> and is greeted with this legibility nightmare:</p>
-<p><img src="ls-colours/green-ls.png" alt=""></p>
+<p><img src="../../blog/ls-colours/green-ls.png" alt=""></p>
 <p>According to dircolors, the green background represents a directory that is other-writable:</p>
 <pre><code>$ dircolors -p | grep ";42"
 STICKY_OTHER_WRITABLE 30;42 # dir that is sticky and other-writable (+t,o+w)

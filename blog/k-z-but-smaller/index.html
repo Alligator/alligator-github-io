@@ -29,7 +29,7 @@ Jun 24, 2020
         <span class="nb">echo</span> <span class="nv">$PWD</span> &gt;&gt; ~/.k
     <span class="k">else</span>
         <span class="nv">K</span><span class="o">=</span>~/.k
-        <span class="k">case</span> <span class="nv">$1</span> in
+        <span class="k">case</span> <span class="nv">$1</span> <span class="k">in</span>
         clean<span class="o">)</span>  sort <span class="nv">$K</span> <span class="p">|</span> uniq &gt; <span class="si">${</span><span class="nv">K</span><span class="si">}</span>.tmp <span class="o">&amp;&amp;</span> mv <span class="si">${</span><span class="nv">K</span><span class="si">}</span>.tmp <span class="si">${</span><span class="nv">K</span><span class="si">}</span><span class="p">;;</span>
         rm<span class="o">)</span> sed -i -E <span class="s2">&quot;\#^</span><span class="si">${</span><span class="nv">PWD</span><span class="si">}</span><span class="s2">\$#d&quot;</span> <span class="si">${</span><span class="nv">K</span><span class="si">}</span><span class="p">;;</span>
         ls<span class="o">)</span> cat <span class="si">${</span><span class="nv">K</span><span class="si">}</span><span class="p">;;</span>
