@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="../../static/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cron job notifications in Discord - alligator's blog</title>
+</head>
+<body>
+  <header>
+    
+<h1>
+  <a href="../../blog/">alligator's blog</a>
+</h1>
+
+  </header>
+  <div class="page">
+    
+<h2>Cron job notifications in Discord</h2>
+Aug 10, 2021
+<div class="blog-post">
+
+  
+
+  <p>Cron's built-in way of sending you a mail if a job printed something (and likely failed) has never been very useful to me. I barely use email and I don't want to set up my server to send it. Instead, I turn these mails into Discord notifications.</p>
+<p>Python's "everything including the kitchen sink" standard library includes an <a href="https://docs.python.org/3/library/mailbox.html">mbox parser</a>, the format used by user mail files, which makes this an easy task.</p>
+<p>I read the mails in my mail file, build up a message of any found, and send them along to Discord. All my cron jobs print only when they fail, and I don't get mail from anything else on my server, so I can safely assume all mails are cron job failures.</p>
+<p>Here's the script:</p>
+<div class="hll"><pre><span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="kn">import</span> <span class="nn">mailbox</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="n">WEBHOOK_URL</span> <span class="o">=</span> <span class="s1">&#39;URL_HERE&#39;</span>
+
+<span class="c1"># collect any mails into a message</span>
+<span class="n">discord_message</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+<span class="k">for</span> <span class="n">message</span> <span class="ow">in</span> <span class="n">mailbox</span><span class="o">.</span><span class="n">mbox</span><span class="p">(</span><span class="s1">&#39;/var/mail/USERNAME_HERE&#39;</span><span class="p">):</span>
+    <span class="n">subject</span> <span class="o">=</span> <span class="n">message</span><span class="p">[</span><span class="s1">&#39;subject&#39;</span><span class="p">]</span>
+    <span class="n">body</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">get_payload</span><span class="p">()</span>
+    <span class="n">discord_message</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">subject</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="n">body</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span>
+
+<span class="c1"># send it to discord</span>
+<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">discord_message</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="n">content</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;&lt;@USER_ID_HERE&gt; cron job(s) failed: ```</span><span class="si">{</span><span class="n">discord_message</span><span class="si">}</span><span class="s1">```&#39;</span>
+    <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">WEBHOOK_URL</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="p">{</span> <span class="s1">&#39;content&#39;</span><span class="p">:</span> <span class="n">content</span> <span class="p">})</span>
+    <span class="c1"># clear out the mailbox</span>
+    <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;/var/mail/alligator&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+<p>The result looks like this:</p>
+<p><img src="../../blog/cron-notifications/cron-notifier.png" alt="The received discord message from the script"></p>
+<p>I set up cron to run this script every few minutes (yes I do see the potential for catastrophe there) and now I get mobile and desktop notifications when a cron job fails. A personal Discord server, a webhook, and a Python script, go a long way towards a poor man's alerting and logging system.</p>
+
+</div>
+<p>
+  <a href="../../blog/">blog index</a>
+</p>
+
+  </div>
+</body>
+</html>
