@@ -5,12 +5,105 @@
   <link rel="alternate" type="text/html" href="https://alligatr.co.uk/blog"/>
   <link rel="self" type="application/atom+xml" href="https://alligatr.co.uk/blog/atom.xml"/>
   
-  <updated>2021-08-10T00:00:00Z</updated>
+  <updated>2021-08-24T00:00:00Z</updated>
   <id>https://alligatr.co.uk/blog</id>
   <author>
     <name>alligator</name>
   </author>
 
+  
+  <entry>
+    <title>Render an SVG that uses external fonts to a canvas</title>
+    <link href="https://alligatr.co.uk/blog/render-an-svg-using-external-fonts-to-a-canvas/" />
+    <id>https://alligatr.co.uk/blog/render-an-svg-using-external-fonts-to-a-canvas/</id>
+    <updated>2021-08-24T00:00:00Z</updated>
+    <content type="html">
+      <![CDATA[
+      <p>Say, have you ever needed to render an inline SVG that uses an external font to a canvas? Of course you have, and this article will tell you how to do it without the fonts breaking.</p>
+<h3 id="tl-dr">tl;dr</h3><p>If you just want to solve the problem:</p>
+<ol>
+<li>Embed any styles into the SVG directly (no CSS)</li>
+<li>Create a data URL for the font file you want to use. See how I did this <a href="render-an-svg-using-external-fonts-to-a-canvas/#creating-a-data-url-for-the-font">here</a></li>
+<li>In the stylesheet where the font is declared, replace the font's URL with the data URL.</li>
+<li>Embed your stylesheet in the SVG in a <code>&lt;style&gt;</code> tag inside a <code>&lt;defs&gt;</code> tag</li>
+<li>Render the SVG to the canvas (see below if you don't know how to do that).</li>
+</ol>
+<h3 id="the-problem">The problem</h3><p>For my <a href="https://pizza.alligatr.co.uk/100.html">💯 generator</a> I wanted the option to turn the generated SVG into a nice copyable and shareable PNG.</p>
+<p>The "standard" way to do this in the browser is the following:</p>
+<ol>
+<li>Turn the SVG into a data URL</li>
+<li>Stuff that data url into an <code>Image</code> object</li>
+<li>Create a canvas element and draw the image on it using <code>canvas.drawImage()</code></li>
+<li>Turn the canvas into a PNG data URL using <code>canvas.toDataURL('image/png')</code></li>
+<li>Stuff that data URL into an <code>&lt;img&gt;</code> element and append it to the page.</li>
+</ol>
+<p>A simple, not convoluted at all, 5 step process.</p>
+<p>Here is what the image should have been:</p>
+<p><img src="render-an-svg-using-external-fonts-to-a-canvas/normal.png" alt="&#34;normal&#34; in a cursive font with two underlines"></p>
+<p>and instead this was the result:</p>
+<p><img src="render-an-svg-using-external-fonts-to-a-canvas/norm.png" alt="&#34;norm&#34; in a serif font with two underlines"></p>
+<p>Hmm. This is anything but the norm.</p>
+<p>The issue here is that external styles aren't applied to SVGs in an img tag. The font is loaded from Google fonts via a stylesheet. For that to work, if the SVG is in an img tag, the <em>stylesheet itself</em> needs to be embedded inside the SVG.</p>
+<p>There's more than that however, an SVG in an img tag has to be <em>standalone</em>, it can't request external resources, including that font. The <em>font itself</em> also needs to be embedded inside the stylesheet. To do that we first need to turn the font file into a data URL.</p>
+<h3 id="creating-a-data-url-for-the-font">Creating a data URL for the font</h3><p>I used this script in the Firefox console to do this:</p>
+<div class="hll"><pre><span></span><span class="nx">resp</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">fetch</span><span class="p">(</span><span class="s1">&#39;https://fonts.gstatic.com/s/ranga/v8/C8cg4cYisGb28qY-AygW43w.woff2&#39;</span><span class="p">);</span>
+<span class="nx">blob</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">resp</span><span class="p">.</span><span class="nx">blob</span><span class="p">();</span>
+<span class="nx">f</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">FileReader</span><span class="p">();</span>
+<span class="nx">f</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s1">&#39;load&#39;</span><span class="p">,</span> <span class="p">()</span> <span class="p">=&gt;</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">f</span><span class="p">.</span><span class="nx">result</span><span class="p">));</span>
+<span class="nx">f</span><span class="p">.</span><span class="nx">readAsDataURL</span><span class="p">(</span><span class="nx">blob</span><span class="p">);</span>
+</pre></div>
+<p>Replace the URL in <code>fetch()</code> with the URL to your font.</p>
+<h3 id="embedding-the-font-in-the-stylesheet">Embedding the font in the stylesheet</h3><p>This is easy, replace the URL in the <code>url()</code> call:</p>
+<div class="hll"><pre><span></span><span class="p">&lt;</span><span class="nt">style</span><span class="p">&gt;</span>
+  <span class="p">@</span><span class="k">font-face</span> <span class="p">{</span>
+    <span class="nt">font-family</span><span class="o">:</span> <span class="s1">&#39;Ranga&#39;</span><span class="o">;</span>
+    <span class="c">/* .. */</span>
+    <span class="nt">src</span><span class="o">:</span> <span class="nt">url</span><span class="o">(</span><span class="nt">data</span><span class="p">:</span><span class="nd">font</span><span class="o">/</span><span class="nt">woff2</span><span class="o">;</span><span class="nt">base64</span><span class="o">,....)</span> <span class="nt">format</span><span class="o">(</span><span class="s1">&#39;woff2&#39;</span><span class="o">);</span>
+  <span class="p">}</span>
+<span class="p">&lt;/</span><span class="nt">style</span><span class="p">&gt;</span>
+</pre></div>
+<h3 id="embedding-the-stylesheet-in-the-svg">Embedding the stylesheet in the SVG</h3><p>This is easy too, add it to SVG inside a <code>&lt;defs&gt;</code> tag:</p>
+<div class="hll"><pre><span></span><span class="p">&lt;</span><span class="nt">svg</span> <span class="na">xmlns</span><span class="o">=</span><span class="s">&quot;http://www.w3.org/2000/svg&quot;</span><span class="p">&gt;</span>
+  <span class="p">&lt;</span><span class="nt">defs</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">style</span><span class="p">&gt;</span>
+      <span class="p">@</span><span class="k">font-face</span> <span class="p">{</span> <span class="c">/* ... */</span> <span class="p">}</span>
+    <span class="p">&lt;/</span><span class="nt">style</span><span class="p">&gt;</span>
+  <span class="p">&lt;/</span><span class="nt">defs</span><span class="p">&gt;</span>
+  rest of SVG here...
+<span class="p">&lt;/</span><span class="nt">svg</span><span class="p">&gt;</span>
+</pre></div>
+<h3 id="and-the-rest">And the rest</h3><p>Now we're clear to do the rest of steps above:</p>
+<div class="hll"><pre><span></span><span class="c1">// convert the SVG to a data URL</span>
+<span class="kd">const</span> <span class="nx">svgText</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">XMLSerializer</span><span class="p">().</span><span class="nx">serializeToString</span><span class="p">(</span><span class="nx">svgElement</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">dataUrl</span> <span class="o">=</span> <span class="sb">`data:image/svg+xml;charset=utf-8,</span><span class="si">${</span><span class="nb">encodeURIComponent</span><span class="p">(</span><span class="nx">svgText</span><span class="p">)</span><span class="si">}</span><span class="sb">`</span><span class="p">;</span>
+
+<span class="c1">// create an image for that data URL</span>
+<span class="kd">const</span> <span class="nx">img</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Image</span><span class="p">();</span>
+<span class="nx">img</span><span class="p">.</span><span class="nx">src</span> <span class="o">=</span> <span class="nx">dataUrl</span><span class="p">;</span>
+
+<span class="nx">img</span><span class="p">.</span><span class="nx">onload</span> <span class="o">=</span> <span class="p">()</span> <span class="p">=&gt;</span> <span class="p">{</span>
+  <span class="c1">// create a canvas</span>
+  <span class="kd">const</span> <span class="nx">canvas</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;canvas&#39;</span><span class="p">);</span>
+  <span class="nx">canvas</span><span class="p">.</span><span class="nx">width</span> <span class="o">=</span> <span class="nx">svg</span><span class="p">.</span><span class="nx">getBoundingClientRect</span><span class="p">().</span><span class="nx">width</span><span class="p">;</span>
+  <span class="nx">canvas</span><span class="p">.</span><span class="nx">height</span> <span class="o">=</span> <span class="nx">svg</span><span class="p">.</span><span class="nx">getBoundingClientRect</span><span class="p">().</span><span class="nx">height</span><span class="p">;</span>
+
+  <span class="c1">// draw the image on to the canvas</span>
+  <span class="kd">const</span> <span class="nx">ctx</span> <span class="o">=</span> <span class="nx">canvas</span><span class="p">.</span><span class="nx">getContext</span><span class="p">(</span><span class="s1">&#39;2d&#39;</span><span class="p">);</span>
+  <span class="nx">ctx</span><span class="p">.</span><span class="nx">drawImage</span><span class="p">(</span><span class="nx">img</span><span class="p">,</span> <span class="mf">0</span><span class="p">,</span> <span class="mf">0</span><span class="p">);</span>
+
+  <span class="c1">// do something with the canvas</span>
+  <span class="c1">// e.g. turn it into a PNG and add it to the document:</span>
+  <span class="kd">const</span> <span class="nx">pngUrl</span> <span class="o">=</span> <span class="nx">canvas</span><span class="p">.</span><span class="nx">toDataURL</span><span class="p">(</span><span class="s1">&#39;image/png&#39;</span><span class="p">);</span>
+  <span class="kd">const</span> <span class="nx">imgElement</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;img&#39;</span><span class="p">);</span>
+  <span class="nx">imgElement</span><span class="p">.</span><span class="nx">src</span> <span class="o">=</span> <span class="nx">pngUrl</span><span class="p">;</span>
+  <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">appendChild</span><span class="p">(</span><span class="nx">imgElement</span><span class="p">);</span>
+<span class="p">};</span>
+</pre></div>
+<p>Enjoy. I hope that saved you a wasted evening's hacking.</p>
+
+      ]]>
+    </content>
+  </entry>
   
   <entry>
     <title>Cron job notifications in Discord</title>
@@ -44,7 +137,7 @@
     <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;/var/mail/alligator&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </pre></div>
 <p>The result looks like this:</p>
-<p><img src="../../blog/cron-notifications/cron-notifier.png" alt="The received discord message from the script"></p>
+<p><img src="cron-notifications/cron-notifier.png" alt="The received discord message from the script"></p>
 <p>I set up cron to run this script every few minutes (yes I do see the potential for catastrophe there) and now I get mobile and desktop notifications when a cron job fails. A personal Discord server, a webhook, and a Python script, go a long way towards a poor man's alerting and logging system.</p>
 
       ]]>
@@ -107,7 +200,7 @@
 td { text-align: right; }
 </style><p>Seam carving is a content-aware image resizing algorithm, and I've been working on a <a href="https://github.com/Alligator/seam-carving/tree/main">JavaScript implementation of it</a>. It's as fast an I can make it while still using a naïve algorithm. Well as fast as I can make it for now anyway.</p>
 <p>Here's some sample output, the original is on the left, the resized version is on the right:</p>
-<p><img src="../../blog/fast-content-aware-resizing-in-javascript/seam-carving-example.jpg" alt=""></p>
+<p><img src="fast-content-aware-resizing-in-javascript/seam-carving-example.jpg" alt=""></p>
 <p>This article is about optimising the code, so I won't go into how seam carving works. If you want to read about it <a href="https://en.wikipedia.org/wiki/Seam_carving">the wikipedia page</a> does a good enough job.</p>
 <h2 id="seam-carving-js">seam-carving-js</h2><p>I didn't set out to write a seam carving library, I only wanted to use one. I run a discord bot that (among other things) lets users manipulate images, and I wanted a content-aware resize command. It's written in JavaScript and uses node-canvas to manipulate images, so I found <a href="https://github.com/mfbx9da4/seam-carving-js">seam-carving-js</a>, which is also written in JavaScript and works with canvases.</p>
 <p>It does the job, but it's slow and memory hungry. My bot runs on a VPS with a gig of memory, and eating up half a gig to process one image causes a lot of thrashing. I attempted <a href="https://github.com/Alligator/seam-carving-js/commit/05c4c87befa57dfe5a87de008ccc1fff39468118">a hack</a> to help the memory usage, but it didn't do much.</p>
@@ -198,7 +291,7 @@ td { text-align: right; }
 </tbody>
 </table>
 <p>I think this might be TurboFan optimising the small functions sooner than it would optimise the big main function. Or perhaps it can be more selective with what it optimises, rather than doing the whole thing.</p>
-<h2 id="array.copywithin">Array.copyWithin</h2><p>Once the algorithm has decided which seam to get rid of, those pixels need to be removed, one per row in the image. I do this in place in the array of pixels and every time one is removed the rest of the array needs to shuffle along to close the gap. I originally did this using a loop that copies each pixel to it's new location, skipping removed ones.</p>
+<h2 id="array.copyWithin">Array.copyWithin</h2><p>Once the algorithm has decided which seam to get rid of, those pixels need to be removed, one per row in the image. I do this in place in the array of pixels and every time one is removed the rest of the array needs to shuffle along to close the gap. I originally did this using a loop that copies each pixel to it's new location, skipping removed ones.</p>
 <p>After running out of ideas and staring at the TypedArray docs on MDN, I found <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/copyWithin">Array.copyWithin</a>. It's like <code>memmove()</code> and lets you shift data around in an array. Using that, I avoid looping over every pixel and instead only loop over every row, copying the left half of the row, skipping the removed pixel, then copying the right half.</p>
 <p>I <a href="https://github.com/Alligator/seam-carving/commit/435e8f87ef825ca0b3365eecb715af97997fbc29">changed</a> two <a href="https://github.com/Alligator/seam-carving/commit/02001c02dcf7012938f888d235cc84db63d8b1f1">loops</a> to use copyWithin. It made quite a difference:</p>
 <table>
@@ -721,7 +814,7 @@ all of it is necessary.</p>
     <content type="html">
       <![CDATA[
       <p>A PSA for anyone who runs <code>ls</code> and is greeted with this legibility nightmare:</p>
-<p><img src="../../blog/ls-colours/green-ls.png" alt=""></p>
+<p><img src="ls-colours/green-ls.png" alt=""></p>
 <p>According to dircolors, the green background represents a directory that is other-writable:</p>
 <pre><code>$ dircolors -p | grep ";42"
 STICKY_OTHER_WRITABLE 30;42 # dir that is sticky and other-writable (+t,o+w)
