@@ -5,12 +5,330 @@
   <link rel="alternate" type="text/html" href="https://alligatr.co.uk/blog"/>
   <link rel="self" type="application/atom+xml" href="https://alligatr.co.uk/blog/atom.xml"/>
   
-  <updated>2021-08-24T00:00:00Z</updated>
+  <updated>2021-10-14T00:00:00Z</updated>
   <id>https://alligatr.co.uk/blog</id>
   <author>
     <name>alligator</name>
   </author>
 
+  
+  <entry>
+    <title>Creating your own TUI in Vim</title>
+    <link href="https://alligatr.co.uk/blog/creating-your-own-tui-in-vim/" />
+    <id>https://alligatr.co.uk/blog/creating-your-own-tui-in-vim/</id>
+    <updated>2021-10-14T00:00:00Z</updated>
+    <content type="html">
+      <![CDATA[
+      <p>Creating a <abbr title="Text-based User Interface">TUI</abbr> in Vim isn't hard, but isn't well documented. After poring over some popular plugins I think I know how to do it. Once you read this, I hope you will too.</p>
+<p>We're going to create a git log viewer called <code>slog</code>. When a user runs the command <code>:Slog</code>, a window will appear showing a list of commits for the git repository in the current directory. Pressing enter on a commit will show the message and diff for that commit. Pressing enter again will return to the list of commits. Pressing <code>q</code> will close the window.</p>
+<p>It looks like this:</p>
+<video controls width="100%">
+  <source src="slog.mp4" type="video/mp4">
+</video><h2 id="prerequisites">Prerequisites</h2><p>I assume you know Vim quite well, and you know some vimscript, the sort of stuff you'd write in a vimrc. I also assume you know how to use Vim's help, but I'll tell you the help command you need when it's not obvious.</p>
+<p>An <em>exceedingly</em> useful help page is <code>:h vim-functions</code>, an easy to scan list of Vim's built in functions.</p>
+<details>
+  <summary>What are these boxes?</summary>
+  <p>
+    To keep this article skim-friendly, I'll put things you might like to know but don't <em>need</em> to know in these boxes. The title will tell you what's explained within.
+  </p>
+</details><h2 id="setup">Setup</h2><p>Create a file called <code>slog.vim</code> somewhere and start writing. Nothing else to it.</p>
+<h2 id="creating-the-entry-point">Creating the entry-point</h2><p>We start with a function that will be our entry-point and a command, <code>Slog</code>, that calls it.</p>
+<div class="hll"><pre><span></span><span class="c">&quot; the s: makes this function local to this script</span>
+<span class="c">&quot; see :h s:var</span>
+<span class="k">function</span><span class="p">!</span> s:slog<span class="p">()</span>
+  echo <span class="s1">&#39;hello, world&#39;</span>
+<span class="k">endfunction</span>
+
+command<span class="p">!</span> <span class="p">-</span>nargs<span class="p">=</span><span class="m">0</span> Slog <span class="k">call</span> s:slog<span class="p">()</span>
+</pre></div>
+<p>To test it, source the file with <code>:source %</code> and run <code>:Slog</code>. You should see <code>hello, world</code> at the bottom of your window.</p>
+<h2 id="creating-the-window">Creating the window</h2><p>Next we add a function that creates a window.</p>
+<div class="hll"><pre><span></span><span class="k">function</span><span class="p">!</span> s:create_window<span class="p">()</span>
+<span class="c">  &quot; create a new window on the right that&#39;s 80 columns wide</span>
+  <span class="k">vertical</span> <span class="k">botright</span> <span class="m">80</span>new
+
+<span class="c">  &quot; stop the user from editing the buffer</span>
+  <span class="k">setlocal</span> <span class="nb">nomodifiable</span>
+
+<span class="c">  &quot; tell Vim this is a temporary buffer not backed by a file</span>
+  <span class="k">setlocal</span> <span class="nb">buftype</span><span class="p">=</span>nofile <span class="nb">bufhidden</span><span class="p">=</span>wipe <span class="nb">noswapfile</span>
+
+<span class="c">  &quot; no line numbers, no wrapping, highlight the current line</span>
+  <span class="k">setlocal</span> <span class="nb">nonumber</span> <span class="nb">cursorline</span> <span class="nb">nowrap</span> <span class="nb">nospell</span>
+
+<span class="c">  &quot; set the file name of the buffer</span>
+  <span class="k">file</span> [slog]
+<span class="k">endfunction</span>
+</pre></div>
+<p>The set of options starting with <code>buftype</code> make this a “special buffer”—a buffer that shows something other than a file (see <code><a href="https://vimhelp.org/windows.txt.html#special-buffers">:h special-buffers</a></code>.)</p>
+<p>We call this in <code>s:slog</code>:</p>
+<div class="hll"><pre><span></span><span class="k">function</span><span class="p">!</span> s:slog<span class="p">()</span>
+  <span class="k">call</span> s:create_window<span class="p">()</span>
+<span class="k">endfunction</span>
+</pre></div>
+<p>When you run the command, you should see a nice new empty window to the right of your current one.</p>
+<h2 id="adding-content">Adding content</h2><p>To display the list of commits, we'll have git do the heavy lifting. This function displays the output of <code>git log</code> and a title:</p>
+<div class="hll"><pre><span></span><span class="k">function</span><span class="p">!</span> s:show_commits<span class="p">()</span>
+<span class="c">  &quot; let us modify the buffer</span>
+  <span class="k">setlocal</span> <span class="nb">modifiable</span>
+
+<span class="c">  &quot; write the title</span>
+  <span class="k">call</span> append<span class="p">(</span><span class="m">0</span><span class="p">,</span> <span class="s1">&#39;Slog&#39;</span><span class="p">)</span>
+
+<span class="c">  &quot; write the log messages</span>
+  <span class="k">silent</span><span class="p">!</span> read <span class="p">!</span>git log <span class="m">-100</span> <span class="p">--</span>oneline
+
+<span class="c">  &quot; move the cursor to the first message</span>
+  <span class="k">call</span> cursor<span class="p">(</span><span class="m">3</span><span class="p">,</span> <span class="m">0</span><span class="p">)</span>
+
+  <span class="k">setlocal</span> <span class="nb">nomodifiable</span>
+<span class="k">endfunction</span>
+</pre></div>
+<details>
+  <summary><code>silent!</code></summary>
+  <p>
+    <code>silent!</code> is used to hide the <code>X more lines</code> message you see after a <code>:read</code> command.
+  </p>
+</details><p>It goes below <code>create_window</code> in <code>s:slog</code>.</p>
+<div class="hll"><pre><span></span><span class="k">function</span><span class="p">!</span> s:slog<span class="p">()</span>
+  <span class="k">call</span> s:create_window<span class="p">()</span>
+  <span class="k">call</span> s:show_commits<span class="p">()</span>
+<span class="k">endfunction</span>
+</pre></div>
+<p>If you <code>:cd</code> to a git repository and run the command, you should see a list of commits in the new window.</p>
+<h2 id="opening-a-commit">Opening a commit</h2><p>To make our commit list interactive, we add some buffer-local mappings:</p>
+<div class="hll"><pre><span></span><span class="k">function</span><span class="p">!</span> s:add_mappings<span class="p">()</span>
+  nmap <span class="p">&lt;</span><span class="k">silent</span><span class="p">&gt;</span> <span class="p">&lt;</span>buffer<span class="p">&gt;</span> <span class="k">q</span> :<span class="k">bd</span><span class="p">&lt;</span>CR<span class="p">&gt;</span>
+  nmap <span class="p">&lt;</span><span class="k">silent</span><span class="p">&gt;</span> <span class="p">&lt;</span>buffer<span class="p">&gt;</span> <span class="p">&lt;</span>Enter<span class="p">&gt;</span> :<span class="k">call</span> <span class="p">&lt;</span>SID<span class="p">&gt;</span>handle_enter<span class="p">()&lt;</span>CR<span class="p">&gt;</span>
+<span class="k">endfunction</span>
+</pre></div>
+<details>
+  <summary><code>&lt;SID&gt;</code></summary>
+  <p>
+    The <code>&lt;SID&gt;</code> in the second mapping is how we call a script-local function from outside a script. When the user presses enter and this mapping runs, our script will have long since finished, so <code>s:</code> won't work.
+  </p>
+  <p>
+    Script local variables and functions can still be used outside of a script, but their names are mangled to stop clashes. For example, in my current Vim session our <code>s:create_window</code> function is actually named <code>&lt;SNR&gt;108_create_window()</code>. You can see what script functions you have by entering <code>:call &lt;SNR&gt;</code> then pressing tab to see the available options.
+  </p>
+  <p>
+    Vim replaces <code>&lt;SID&gt;</code> in the mapping with the mangled prefix, so it can still find the function after the script has finished.
+  </p>
+  <p>See <code><a href="https://vimhelp.org/map.txt.html#%3CSID%3E">:h &lt;SID&gt;</a></code>.</p>
+</details><p>The first makes <code>q</code> close the buffer. The second makes pressing enter call a function we haven't defined yet, <code>handle_enter</code>.</p>
+<p>Here it is:</p>
+<div class="hll"><pre><span></span><span class="k">function</span><span class="p">!</span> s:handle_enter<span class="p">()</span>
+  <span class="k">setlocal</span> <span class="nb">modifiable</span>
+
+<span class="c">  &quot; get the commit hash by splitting the current line on spaces</span>
+  <span class="k">let</span> hash <span class="p">=</span> split<span class="p">(</span>getline<span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">))</span>[<span class="m">0</span>]
+
+<span class="c">  &quot; clear the buffer using the black-hole register</span>
+<span class="c">  &quot; see :h &quot;_</span>
+  <span class="k">silent</span><span class="p">!</span> normal<span class="p">!</span> gg&quot;_dG
+
+<span class="c">  &quot; show the commit</span>
+  execute <span class="s1">&#39;silent read !git show &#39;</span> . hash
+
+<span class="c">  &quot; move the cursor to the top</span>
+  <span class="k">call</span> cursor<span class="p">(</span><span class="m">1</span><span class="p">,</span> <span class="m">0</span><span class="p">)</span>
+
+<span class="c">  &quot; take advantage of vim&#39;s built in git syntax highlighting</span>
+  <span class="k">setfiletype</span> git
+
+  <span class="k">setlocal</span> <span class="nb">nomodifiable</span>
+<span class="k">endfunction</span>
+</pre></div>
+<details>
+  <summary>Why is <code>execute</code> used?</summary>
+  <p>
+    We need to pass our hash to <code>git show</code>, but everything after the ! in <code>read !</code> is passed as-is to the shell. We work around this by make the command a string, concatenating the hash on to it, and using <code>execute</code> to, uh, execute it.
+  </p>
+</details><p>This gets the commit hash from the current line and uses <code>git show</code> to show information about commit in the buffer.</p>
+<p>It joins the crowd in <code>s:slog</code>.</p>
+<div class="hll"><pre><span></span><span class="k">function</span><span class="p">!</span> s:slog<span class="p">()</span>
+  <span class="k">call</span> s:create_window<span class="p">()</span>
+  <span class="k">call</span> s:add_mappings<span class="p">()</span>
+  <span class="k">call</span> s:show_commits<span class="p">()</span>
+<span class="k">endfunction</span>
+</pre></div>
+<p>Now pressing enter on a commit should show it's message and diff, and q should close the window. Pressing enter while looking at a commit causes an error. Let's fix that by going back to the list of commits instead.</p>
+<h2 id="going-back-to-the-commit-list">Going back to the commit list</h2><p>We can store whether or not we're looking at a commit in a variable. This is declared at the top of <code>create_window</code>:</p>
+<div class="hll"><pre><span></span><span class="k">function</span><span class="p">!</span> s:create_window<span class="p">()</span>
+  <span class="k">let</span> s:viewing_commit <span class="p">=</span> <span class="k">v</span>:false
+  ...
+<span class="k">endfunction</span>
+</pre></div>
+<details>
+  <summary>boolean values</summary>
+  <p>
+    Before Vim 8 vimscript had no boolean values, 0 was false and anything else was true. Vim 8 added a boolean type and the special variables <code>v:false</code> and <code>v:true</code>.
+  </p>
+  <p>
+    If you want your script to work in Vim 7, use 0 and 1 instead of <code>v:false</code> and <code>v:true</code>.
+  </p>
+</details><p>We check this in <code>handle_enter</code>. If it's true we show the list of commits, if it's false we show a single commit.</p>
+<div class="hll"><pre><span></span><span class="k">function</span><span class="p">!</span> s:handle_enter<span class="p">()</span>
+  <span class="k">setlocal</span> <span class="nb">modifiable</span>
+
+  <span class="k">if</span> s:viewing_commit
+<span class="c">    &quot; show the list of commits</span>
+
+    <span class="k">silent</span><span class="p">!</span> normal<span class="p">!</span> gg&quot;_dG
+    <span class="k">call</span> s:show_commits<span class="p">()</span>
+    <span class="k">let</span> s:viewing_commit <span class="p">=</span> <span class="k">v</span>:false
+  <span class="k">else</span>
+<span class="c">    &quot; show a single commit (same code as before)</span>
+
+<span class="c">    &quot; get the commit hash</span>
+    <span class="k">let</span> hash <span class="p">=</span> split<span class="p">(</span>getline<span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">))</span>[<span class="m">0</span>]
+
+<span class="c">    &quot; clear the buffer using the black-hole register</span>
+    <span class="k">silent</span><span class="p">!</span> normal<span class="p">!</span> gg&quot;_dG
+
+<span class="c">    &quot; show the commit</span>
+    execute <span class="s1">&#39;silent read !git show &#39;</span> . hash
+
+<span class="c">    &quot; move the cursor to the top</span>
+    <span class="k">call</span> cursor<span class="p">(</span><span class="m">1</span><span class="p">,</span> <span class="m">0</span><span class="p">)</span>
+
+<span class="c">    &quot; take advantage of vim&#39;s built in git syntax highlighting</span>
+    <span class="k">setfiletype</span> git
+
+    <span class="k">let</span> s:viewing_commit <span class="p">=</span> <span class="k">v</span>:true
+  <span class="k">endif</span>
+
+  <span class="k">setlocal</span> <span class="nb">nomodifiable</span>
+<span class="k">endfunction</span>
+</pre></div>
+<p>You should now return to the list of commits if you press enter while looking at a commit.</p>
+<h2 id="syntax-highlighting">Syntax highlighting</h2><p>We can add some colour to the list of commits by declaring our own syntax highlighting for the buffer. This function will highlight the title and the commit hashes:</p>
+<div class="hll"><pre><span></span><span class="k">function</span><span class="p">!</span> s:add_syntax<span class="p">()</span>
+<span class="c">  &quot; clear any highlighting from the buffer</span>
+  <span class="k">syn</span> clear
+
+<span class="c">  &quot; match the first line of the buffer</span>
+<span class="c">  &quot; see :h /\%l</span>
+  <span class="k">syn</span> region slogTitle <span class="k">start</span><span class="p">=</span><span class="sr">/\%1l/</span> <span class="k">end</span><span class="p">=</span><span class="sr">/\%2l/</span>
+
+<span class="c">  &quot; match a commit hash</span>
+  <span class="k">syn</span> <span class="k">match</span> slogCommit <span class="sr">/[a-f0-9]\{7}/</span>
+
+<span class="c">  &quot; link the groups created above to some built-in ones</span>
+  <span class="k">hi</span> <span class="nb">def</span> link slogTitle Title
+  <span class="k">hi</span> <span class="nb">def</span> link slogCommit Constant
+<span class="k">endfunction</span>
+</pre></div>
+<p>It's added to the bottom of <code>show_commits</code>:</p>
+<div class="hll"><pre><span></span><span class="k">function</span><span class="p">!</span> s:show_commits<span class="p">()</span>
+  ...
+  <span class="k">call</span> s:add_syntax<span class="p">()</span>
+<span class="k">endfunction</span>
+</pre></div>
+<p>Looking at examples is the best way to see what can done with syntax highlighting, here's the syntax in a couple of popular plugins:</p>
+<ul>
+<li><a href="https://github.com/sjl/gundo.vim/blob/c5efef192b975b8e7d5fa3c6db932648d3b76323/autoload/gundo.vim#L166">gundo.vim</a></li>
+<li><a href="https://github.com/junegunn/vim-plug/blob/c9971346bb486ccff354aaee8606cc0d2d5a0c97/plug.vim#L804">vim-plug</a></li>
+</ul>
+<h2 id="wrapping-it-up">Wrapping it up</h2><p>That's it! Now you know how to show your own stuff in a Vim buffer and run things when someone interacts with it.</p>
+<p>Here are the plugins I looked at a lot while writing this:</p>
+<ul>
+<li><a href="https://github.com/junegunn/vim-plug">vim-plug</a></li>
+<li><a href="https://github.com/junegunn/gv.vim">gv.vim</a></li>
+<li><a href="https://github.com/junegunn/vim-peekaboo">vim-peekaboo</a></li>
+<li><a href="https://github.com/sjl/gundo.vim">gundo.vim</a></li>
+</ul>
+<p>And Steve Losh's <a href="https://learnvimscriptthehardway.stevelosh.com/">Learn Vimscript the Hard Way</a> was usually open somewhere. If you haven't read it, you should.</p>
+<p>Here's the full code for <code>slog.vim</code>:</p>
+<div class="hll"><pre><span></span><span class="k">function</span><span class="p">!</span> s:create_window<span class="p">()</span>
+  <span class="k">let</span> s:viewing_commit <span class="p">=</span> <span class="k">v</span>:false
+
+<span class="c">  &quot; create a new window on the right that&#39;s 80 columns wide</span>
+  <span class="k">vertical</span> <span class="k">botright</span> <span class="m">80</span>new
+  <span class="k">setlocal</span> <span class="nb">nomodifiable</span>
+
+<span class="c">  &quot; tell vim this is a temporary buffer not backed by a file</span>
+  <span class="k">setlocal</span> <span class="nb">buftype</span><span class="p">=</span>nofile <span class="nb">bufhidden</span><span class="p">=</span>wipe <span class="nb">noswapfile</span>
+
+<span class="c">  &quot; no line numbers, no wrapping, highlight the current line</span>
+  <span class="k">setlocal</span> <span class="nb">nonumber</span> <span class="nb">cursorline</span> <span class="nb">nowrap</span> <span class="nb">nospell</span>
+
+<span class="c">  &quot; set the current file name</span>
+  <span class="k">file</span> [slog]
+<span class="k">endfunction</span>
+
+<span class="k">function</span><span class="p">!</span> s:add_mappings<span class="p">()</span>
+  nmap <span class="p">&lt;</span><span class="k">silent</span><span class="p">&gt;</span> <span class="p">&lt;</span>buffer<span class="p">&gt;</span> <span class="k">q</span> :<span class="k">bd</span><span class="p">&lt;</span>CR<span class="p">&gt;</span>
+  nmap <span class="p">&lt;</span><span class="k">silent</span><span class="p">&gt;</span> <span class="p">&lt;</span>buffer<span class="p">&gt;</span> <span class="p">&lt;</span>Enter<span class="p">&gt;</span> :<span class="k">call</span> <span class="p">&lt;</span>SID<span class="p">&gt;</span>handle_enter<span class="p">()&lt;</span>CR<span class="p">&gt;</span>
+<span class="k">endfunction</span>
+
+<span class="k">function</span><span class="p">!</span> s:add_syntax<span class="p">()</span>
+  <span class="k">syn</span> clear
+
+  <span class="k">syn</span> region slogTitle <span class="k">start</span><span class="p">=</span><span class="sr">/\%1l/</span> <span class="k">end</span><span class="p">=</span><span class="sr">/\%2l/</span>
+  <span class="k">syn</span> <span class="k">match</span> slogCommit <span class="sr">/[a-f0-9]\{7}/</span>
+
+  <span class="k">hi</span> <span class="nb">def</span> link slogTitle Title
+  <span class="k">hi</span> <span class="nb">def</span> link slogCommit Constant
+<span class="k">endfunction</span>
+
+<span class="k">function</span><span class="p">!</span> s:show_commits<span class="p">()</span>
+  <span class="k">setlocal</span> <span class="nb">modifiable</span>
+
+<span class="c">  &quot; write the title</span>
+  <span class="k">call</span> append<span class="p">(</span><span class="m">0</span><span class="p">,</span> <span class="s1">&#39;Slog&#39;</span><span class="p">)</span>
+
+<span class="c">  &quot; write the log messages</span>
+  <span class="k">silent</span><span class="p">!</span> read <span class="p">!</span>git log <span class="m">-100</span> <span class="p">--</span>oneline
+
+<span class="c">  &quot; move the cursor to the first message</span>
+  <span class="k">call</span> cursor<span class="p">(</span><span class="m">3</span><span class="p">,</span> <span class="m">0</span><span class="p">)</span>
+
+  <span class="k">setlocal</span> <span class="nb">nomodifiable</span>
+  <span class="k">call</span> s:add_syntax<span class="p">()</span>
+<span class="k">endfunction</span>
+
+<span class="k">function</span><span class="p">!</span> s:handle_enter<span class="p">()</span>
+  <span class="k">setlocal</span> <span class="nb">modifiable</span>
+
+  <span class="k">if</span> s:viewing_commit
+<span class="c">    &quot; clear the buffer using the black-hole register</span>
+    <span class="k">silent</span><span class="p">!</span> normal<span class="p">!</span> gg&quot;_dG
+    <span class="k">call</span> s:show_commits<span class="p">()</span>
+    <span class="k">let</span> s:viewing_commit <span class="p">=</span> <span class="k">v</span>:false
+  <span class="k">else</span>
+<span class="c">    &quot; get the commit hash</span>
+    <span class="k">let</span> hash <span class="p">=</span> split<span class="p">(</span>getline<span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">))</span>[<span class="m">0</span>]
+
+<span class="c">    &quot; clear the buffer using the black-hole register</span>
+    <span class="k">silent</span><span class="p">!</span> normal<span class="p">!</span> gg&quot;_dG
+
+<span class="c">    &quot; show the commit</span>
+    execute <span class="s1">&#39;silent read !git show &#39;</span> . hash
+
+<span class="c">    &quot; move the cursor to the top</span>
+    <span class="k">call</span> cursor<span class="p">(</span><span class="m">1</span><span class="p">,</span> <span class="m">0</span><span class="p">)</span>
+
+<span class="c">    &quot; take advantage of vim&#39;s built in git syntax highlighting</span>
+    <span class="k">setfiletype</span> git
+
+    <span class="k">let</span> s:viewing_commit <span class="p">=</span> <span class="k">v</span>:true
+  <span class="k">endif</span>
+
+  <span class="k">setlocal</span> <span class="nb">nomodifiable</span>
+<span class="k">endfunction</span>
+
+<span class="k">function</span><span class="p">!</span> s:slog<span class="p">()</span>
+  <span class="k">call</span> s:create_window<span class="p">()</span>
+  <span class="k">call</span> s:add_mappings<span class="p">()</span>
+  <span class="k">call</span> s:show_commits<span class="p">()</span>
+<span class="k">endfunction</span>
+
+command<span class="p">!</span> <span class="p">-</span>nargs<span class="p">=</span><span class="m">0</span> Slog <span class="k">call</span> s:slog<span class="p">()</span>
+</pre></div>
+
+      ]]>
+    </content>
+  </entry>
   
   <entry>
     <title>Render an SVG that uses external fonts to a canvas</title>
