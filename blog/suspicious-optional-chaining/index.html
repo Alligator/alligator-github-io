@@ -50,7 +50,7 @@ Aug 9, 2021
     <span class="k">return</span> <span class="nx">response</span><span class="p">.</span><span class="nx">user</span><span class="p">.</span><span class="nx">name</span> <span class="o">??</span> <span class="s1">&#39;Anonymous&#39;</span><span class="p">;</span>
   <span class="p">}</span>
 
-  <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;User not found&#39;</span><span class="p">);</span>
+  <span class="k">throw</span> <span class="ow">new</span> <span class="ne">Error</span><span class="p">(</span><span class="s1">&#39;User not found&#39;</span><span class="p">);</span>
 <span class="p">}</span>
 </pre></div>
 <p>This code is more in control of it's data. It knows which conditions need to be checked. We didn't set out to write code that does this, but were led to do so by removing the conditional chaining operators.</p>

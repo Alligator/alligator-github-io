@@ -33,17 +33,17 @@ mark {
   <span class="nb">Number</span><span class="p">,</span>
 <span class="p">}</span>
 
-<span class="kd">type</span> <span class="nx">ObjString</span> <span class="o">=</span> <span class="p">{</span>
+<span class="kr">type</span> <span class="nx">ObjString</span> <span class="o">=</span> <span class="p">{</span>
   <span class="nx">kind</span>: <span class="kt">ObjKind.String</span><span class="p">;</span>
   <span class="nx">str</span>: <span class="kt">string</span><span class="p">;</span>
 <span class="p">}</span>
 
-<span class="kd">type</span> <span class="nx">ObjNumber</span> <span class="o">=</span> <span class="p">{</span>
+<span class="kr">type</span> <span class="nx">ObjNumber</span> <span class="o">=</span> <span class="p">{</span>
   <span class="nx">kind</span>: <span class="kt">ObjKind.Number</span><span class="p">;</span>
   <span class="nx">num</span>: <span class="kt">number</span><span class="p">;</span>
 <span class="p">}</span>
 
-<span class="kd">type</span> <span class="nx">Obj</span> <span class="o">=</span> <span class="nx">ObjString</span> <span class="o">|</span> <span class="nx">ObjNumber</span><span class="p">;</span>
+<span class="kr">type</span> <span class="nx">Obj</span> <span class="o">=</span> <span class="nx">ObjString</span> <span class="o">|</span> <span class="nx">ObjNumber</span><span class="p">;</span>
 </pre></div>
 <p>and I want a function <code>checkObj</code> that, if called like this:</p>
 <div class="hll"><pre><span></span><span class="kd">const</span> <span class="nx">someObj1</span>: <span class="kt">Obj</span> <span class="o">=</span> <span class="p">...;</span>
@@ -55,7 +55,7 @@ mark {
 <h2 id="the-first-attempt">the first attempt</h2><p>This version of <code>checkObj</code> does <strong>not</strong> do this, but we'll build on it:</p>
 <div class="hll"><pre><span></span><span class="kd">function</span> <span class="nx">checkObj</span><span class="p">(</span><span class="nx">obj</span>: <span class="kt">Obj</span><span class="p">,</span> <span class="nx">kind</span>: <span class="kt">ObjKind</span><span class="p">)</span><span class="o">:</span> <span class="nx">Obj</span> <span class="p">{</span>
   <span class="k">if</span> <span class="p">(</span><span class="nx">obj</span><span class="p">.</span><span class="nx">kind</span> <span class="o">!==</span> <span class="nx">kind</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;type mismatch!&#39;</span><span class="p">);</span>
+    <span class="k">throw</span> <span class="ow">new</span> <span class="ne">Error</span><span class="p">(</span><span class="s1">&#39;type mismatch!&#39;</span><span class="p">);</span>
   <span class="p">}</span>
   <span class="k">return</span> <span class="nx">obj</span><span class="p">;</span>
 <span class="p">}</span>
@@ -86,7 +86,7 @@ return obj <mark>as Extract&lt;Obj, { kind: K }&gt;</mark>;
   <span class="nx">kind</span>: <span class="kt">K</span><span class="p">,</span>
 <span class="p">)</span><span class="o">:</span> <span class="nx">Extract</span><span class="o">&lt;</span><span class="nx">Obj</span><span class="p">,</span> <span class="p">{</span> <span class="nx">kind</span>: <span class="kt">K</span> <span class="p">}</span><span class="o">&gt;</span> <span class="p">{</span>
   <span class="k">if</span> <span class="p">(</span><span class="nx">obj</span><span class="p">.</span><span class="nx">kind</span> <span class="o">!==</span> <span class="nx">kind</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;type mismatch!&#39;</span><span class="p">);</span>
+    <span class="k">throw</span> <span class="ow">new</span> <span class="ne">Error</span><span class="p">(</span><span class="s1">&#39;type mismatch!&#39;</span><span class="p">);</span>
   <span class="p">}</span>
   <span class="k">return</span> <span class="nx">obj</span> <span class="kr">as</span> <span class="nx">Extract</span><span class="o">&lt;</span><span class="nx">Obj</span><span class="p">,</span> <span class="p">{</span> <span class="nx">kind</span>: <span class="kt">K</span> <span class="p">}</span><span class="o">&gt;</span><span class="p">;</span>
 <span class="p">}</span>

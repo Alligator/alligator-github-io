@@ -51,7 +51,7 @@ Aug 24, 2021
 <h3 id="creating-a-data-url-for-the-font">Creating a data URL for the font</h3><p>I used this script in the Firefox console to do this:</p>
 <div class="hll"><pre><span></span><span class="nx">resp</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">fetch</span><span class="p">(</span><span class="s1">&#39;https://fonts.gstatic.com/s/ranga/v8/C8cg4cYisGb28qY-AygW43w.woff2&#39;</span><span class="p">);</span>
 <span class="nx">blob</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">resp</span><span class="p">.</span><span class="nx">blob</span><span class="p">();</span>
-<span class="nx">f</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">FileReader</span><span class="p">();</span>
+<span class="nx">f</span> <span class="o">=</span> <span class="ow">new</span> <span class="nx">FileReader</span><span class="p">();</span>
 <span class="nx">f</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s1">&#39;load&#39;</span><span class="p">,</span> <span class="p">()</span> <span class="p">=&gt;</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">f</span><span class="p">.</span><span class="nx">result</span><span class="p">));</span>
 <span class="nx">f</span><span class="p">.</span><span class="nx">readAsDataURL</span><span class="p">(</span><span class="nx">blob</span><span class="p">);</span>
 </pre></div>
@@ -77,11 +77,11 @@ Aug 24, 2021
 </pre></div>
 <h3 id="and-the-rest">And the rest</h3><p>Now we're clear to do the rest of steps above:</p>
 <div class="hll"><pre><span></span><span class="c1">// convert the SVG to a data URL</span>
-<span class="kd">const</span> <span class="nx">svgText</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">XMLSerializer</span><span class="p">().</span><span class="nx">serializeToString</span><span class="p">(</span><span class="nx">svgElement</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">svgText</span> <span class="o">=</span> <span class="ow">new</span> <span class="nx">XMLSerializer</span><span class="p">().</span><span class="nx">serializeToString</span><span class="p">(</span><span class="nx">svgElement</span><span class="p">);</span>
 <span class="kd">const</span> <span class="nx">dataUrl</span> <span class="o">=</span> <span class="sb">`data:image/svg+xml;charset=utf-8,</span><span class="si">${</span><span class="nb">encodeURIComponent</span><span class="p">(</span><span class="nx">svgText</span><span class="p">)</span><span class="si">}</span><span class="sb">`</span><span class="p">;</span>
 
 <span class="c1">// create an image for that data URL</span>
-<span class="kd">const</span> <span class="nx">img</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Image</span><span class="p">();</span>
+<span class="kd">const</span> <span class="nx">img</span> <span class="o">=</span> <span class="ow">new</span> <span class="nx">Image</span><span class="p">();</span>
 <span class="nx">img</span><span class="p">.</span><span class="nx">src</span> <span class="o">=</span> <span class="nx">dataUrl</span><span class="p">;</span>
 
 <span class="nx">img</span><span class="p">.</span><span class="nx">onload</span> <span class="o">=</span> <span class="p">()</span> <span class="p">=&gt;</span> <span class="p">{</span>
