@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="../../static/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Contextual command-line help - alligator's blog</title>
+</head>
+<body>
+  <header>
+    
+<h1>
+  <a href="../">alligator's blog</a>
+</h1>
+
+  </header>
+  <div class="page">
+    
+<h2>Contextual command-line help</h2>
+Apr 21, 2022
+<div class="blog-post">
+
+  
+
+  <p>An idea: what if running a program with <code>-h</code> or <code>--help</code> described the flags and arguments passed in, rather than everything? Subcommands get this treatment (e.g. <code>git log -h</code>), why not everything else?</p>
+<p>Say you want to know what <code>fzf +s</code> does. Running <code>fzf -h</code> prints 89 lines of text. The <code>+s</code> flag is on line 17. That's 72 lines of scrolling. If the help was contextual, you could run <code>fzf +s -h</code> to see just the help for <code>+s</code>.</p>
+<p>We could go further and print argument values too. A hypothetical example:</p>
+<pre><code>$ fzf +s -q $(date) --preview="ls {}" -h
+usage: fzf [options]
+
+  +s, --no-sort       Do not sort the result
+  --prevjew=COMMAND   Command to preview highlighted line ({})
+    value: "ls {}"
+  -q, --query=STR     Start the finder with the given query
+    value: "Fri 15 Apr 2022 19:15:38 BST"
+</code></pre>
+<p>You could copy any command invocation from the internet and add <code>-h</code> to understand what it does.</p>
+
+</div>
+<p>
+  <a href="../">blog index</a>
+</p>
+
+  </div>
+</body>
+</html>
