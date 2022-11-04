@@ -5,12 +5,30 @@
   <link rel="alternate" type="text/html" href="https://alligatr.co.uk/blog"/>
   <link rel="self" type="application/atom+xml" href="https://alligatr.co.uk/blog/atom.xml"/>
   
-  <updated>2022-04-21T00:00:00Z</updated>
+  <updated>2022-11-03T00:00:00Z</updated>
   <id>https://alligatr.co.uk/blog</id>
   <author>
     <name>alligator</name>
   </author>
 
+  
+  <entry>
+    <title>snds - a generative music thing</title>
+    <link href="https://alligatr.co.uk/blog/snds/" />
+    <id>https://alligatr.co.uk/blog/snds/</id>
+    <updated>2022-11-03T00:00:00Z</updated>
+    <content type="html">
+      <![CDATA[
+      <p><a href="https://irc.alligatr.co.uk/snds/">snds</a> is a web-based generative music thingy I've been working on. Each box is a little experiment. Click on one to hear it and see its visualisation.</p>
+<h2 id="sike">sike</h2><p>Eno-esque loops of varying lengths. Each loop uses notes from the same scale, then I fiddled around with the timing until it got interesting.</p>
+<h2 id="evening-echo">evening echo</h2><p>The ticking parts have intervals of 1 and 1.02 seconds. They slowly diverge then recombine, over and over. The main synth is being triggered at 0.98 and 1 second intervals, making the note lengths change as the two loops fight.</p>
+<h2 id="across-the-two-lane">across the two lane</h2><p>This plays four parts by variously multiplying and dividing a base frequency by a changing ratio.</p>
+<h2 id="mostly-spoon">mostly spoon</h2><p>My attempt at something "nice". A few loops in dorian, sometimes with a raised fourth to keep you awake.</p>
+<h2 id="welcome-brake">welcome brake</h2><p>Three noise synths triggering every 0.5, 0.375 and 0.125 seconds. Each synth has it's own bitcrusher, where the number of bits is twiddled every quarter note, creating the variations.</p>
+
+      ]]>
+    </content>
+  </entry>
   
   <entry>
     <title>Contextual command-line help</title>
