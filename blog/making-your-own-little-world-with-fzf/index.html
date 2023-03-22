@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="../../static/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Making your own little world with fzf - alligator's blog</title>
+</head>
+<body>
+  <header>
+    
+<h1>
+  <a href="../">alligator's blog</a>
+</h1>
+
+  </header>
+  <div class="page">
+    
+<h2>Making your own little world with fzf</h2>
+Mar 22, 2023
+<div class="blog-post">
+
+  
+
+  <p>In-between the interesting tasks like writing code or debugging, there's lots of little, routine
+things to do. This post is about how I do these quicker with fzf.</p>
+<h2 id="fzf">fzf?</h2><p><a href="https://github.com/junegunn/fzf">fzf</a> is a general purpose tool for picking a thing from a list of
+things. It reads the list from stdin, and writes the selected item to stdout. What's in the list is
+up to you, as is what you do with it.</p>
+<p>Here's some ways I use it, in increasing complexity.</p>
+<h2 id="level-1-sln-files">Level 1 - .sln files</h2><p>We have a monorepo containing lots of services, each of which has it's own .sln file. This tiny
+script has saved me many minutes clicking around Windows explorer to open the .sln for a service:</p>
+<aside>
+<p>This example is in bash even though the original is a Windows batch script.</p>
+<p>Batch scripts are just too weird to use for educational purposes.</p>
+</aside><div class="hll"><pre><span></span>devenv<span class="w"> </span><span class="k">$(</span>fd<span class="w"> </span>-a<span class="w"> </span>.sln<span class="w"> </span><span class="p">|</span><span class="w"> </span>fzf<span class="k">)</span>
+</pre></div>
+<p>It uses <a href="https://github.com/sharkdp/fd">fd</a> to recursively find files ending in .sln, then fzf to pick
+one, then opens that file in <code>devenv</code> (Visual Studio).</p>
+<h2 id="level-2-recent-git-branches">Level 2 - Recent git branches</h2><p>This shows me a list of git branches, sorted by how recently I switched to them:</p>
+<div class="hll"><pre><span></span><span class="nv">current_branch</span><span class="o">=</span><span class="k">$(</span>git<span class="w"> </span>branch<span class="w"> </span>--show-current<span class="k">)</span>
+
+<span class="nv">ref</span><span class="o">=</span><span class="k">$(</span>git<span class="w"> </span>reflog<span class="w"> </span>-1000<span class="w"> </span>--format<span class="o">=</span><span class="s2">&quot;%cs %gs&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="p">|</span><span class="w"> </span>rg<span class="w"> </span>-i<span class="w"> </span><span class="s2">&quot;checkout: moving from&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="p">|</span><span class="w"> </span>awk<span class="w"> </span><span class="s1">&#39;!dupes[$5]++ { print $1, $5 }&#39;</span><span class="w"> </span><span class="se">\</span>
+<span class="p">|</span><span class="w"> </span>fzf<span class="w"> </span>-n<span class="w"> </span><span class="m">2</span><span class="w"> </span>--header<span class="o">=</span><span class="s2">&quot;current branch: </span><span class="nv">$current_branch</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="p">|</span><span class="w"> </span>awk<span class="w"> </span><span class="s1">&#39;{ print $2 }&#39;</span><span class="k">)</span>
+
+git<span class="w"> </span>checkout<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$ref</span><span class="s2">&quot;</span>
+</pre></div>
+<p>This looks complicated, but most of it is plumbing to get the list of branches. It uses <code>git
+reflog</code>, <a href="https://github.com/BurntSushi/ripgrep">ripgrep</a> and awk to get a list of branches and the
+date they were last used, like this:</p>
+<pre><code>2023-03-21 latest-branch
+2023-03-14 old-branch
+2023-01-12 older-branch
+</code></pre>
+<p>Which fzf then sorts alphabetically and shows from the bottom up, so you see the most recent branch
+first. The <code>-n 2</code> flag tells fzf to search in the second field, i.e. the branch name.</p>
+<p>Usually I want to switch to the most recent branch, which will be the default item selected. With
+this script I can run it, quickly check if the branch is what I expected, and press enter to switch
+to it.</p>
+<h2 id="level-3-as-a-filter-in-a-larger-program">Level 3 - As a filter in a larger program</h2><p>We have lots of services with HTTP APIs and Swagger pages letting you poke at those
+APIs. I often want to open a service's swagger page, but I don't know it's address.</p>
+<p>I can get that information from an API, so I have python script like this:</p>
+<div class="hll"><pre><span></span><span class="c1"># get the service names from an API</span>
+<span class="n">fzf_input</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">service_names</span><span class="p">)</span>
+
+<span class="n">p</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s1">&#39;fzf&#39;</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="n">fzf_input</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">returncode</span><span class="p">)</span>
+<span class="n">selected_service_name</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+<span class="c1"># look up the service address for the selected name</span>
+<span class="c1"># and open it in a browser</span>
+</pre></div>
+<p>Shelling out to fzf is easy, especially in python since <code>subprocess.run</code> blocks until the program
+exits. This script shows me a list of services, I pick one, and it's Swagger page opens in my
+browser.</p>
+<p>These are just some of the ways I use fzf to create my own little world of terminal utilities.</p>
+<p>Speeding up these routine tasks isn't <em>really</em> about saving time. It's about staying focused and
+avoiding distractions. Clicking around a slow UI or a file explorer is prime distraction time for
+me.</p>
+
+</div>
+<p>
+  <a href="../">blog index</a>
+</p>
+
+  </div>
+  <script data-goatcounter="https://alligator.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

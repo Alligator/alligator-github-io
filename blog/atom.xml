@@ -5,12 +5,83 @@
   <link rel="alternate" type="text/html" href="https://alligatr.co.uk/blog"/>
   <link rel="self" type="application/atom+xml" href="https://alligatr.co.uk/blog/atom.xml"/>
   
-  <updated>2022-11-03T00:00:00Z</updated>
+  <updated>2023-03-22T00:00:00Z</updated>
   <id>https://alligatr.co.uk/blog</id>
   <author>
     <name>alligator</name>
   </author>
 
+  
+  <entry>
+    <title>Making your own little world with fzf</title>
+    <link href="https://alligatr.co.uk/blog/making-your-own-little-world-with-fzf/" />
+    <id>https://alligatr.co.uk/blog/making-your-own-little-world-with-fzf/</id>
+    <updated>2023-03-22T00:00:00Z</updated>
+    <content type="html">
+      <![CDATA[
+      <p>In-between the interesting tasks like writing code or debugging, there's lots of little, routine
+things to do. This post is about how I do these quicker with fzf.</p>
+<h2 id="fzf">fzf?</h2><p><a href="https://github.com/junegunn/fzf">fzf</a> is a general purpose tool for picking a thing from a list of
+things. It reads the list from stdin, and writes the selected item to stdout. What's in the list is
+up to you, as is what you do with it.</p>
+<p>Here's some ways I use it, in increasing complexity.</p>
+<h2 id="level-1-sln-files">Level 1 - .sln files</h2><p>We have a monorepo containing lots of services, each of which has it's own .sln file. This tiny
+script has saved me many minutes clicking around Windows explorer to open the .sln for a service:</p>
+<aside>
+<p>This example is in bash even though the original is a Windows batch script.</p>
+<p>Batch scripts are just too weird to use for educational purposes.</p>
+</aside><div class="hll"><pre><span></span>devenv<span class="w"> </span><span class="k">$(</span>fd<span class="w"> </span>-a<span class="w"> </span>.sln<span class="w"> </span><span class="p">|</span><span class="w"> </span>fzf<span class="k">)</span>
+</pre></div>
+<p>It uses <a href="https://github.com/sharkdp/fd">fd</a> to recursively find files ending in .sln, then fzf to pick
+one, then opens that file in <code>devenv</code> (Visual Studio).</p>
+<h2 id="level-2-recent-git-branches">Level 2 - Recent git branches</h2><p>This shows me a list of git branches, sorted by how recently I switched to them:</p>
+<div class="hll"><pre><span></span><span class="nv">current_branch</span><span class="o">=</span><span class="k">$(</span>git<span class="w"> </span>branch<span class="w"> </span>--show-current<span class="k">)</span>
+
+<span class="nv">ref</span><span class="o">=</span><span class="k">$(</span>git<span class="w"> </span>reflog<span class="w"> </span>-1000<span class="w"> </span>--format<span class="o">=</span><span class="s2">&quot;%cs %gs&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="p">|</span><span class="w"> </span>rg<span class="w"> </span>-i<span class="w"> </span><span class="s2">&quot;checkout: moving from&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="p">|</span><span class="w"> </span>awk<span class="w"> </span><span class="s1">&#39;!dupes[$5]++ { print $1, $5 }&#39;</span><span class="w"> </span><span class="se">\</span>
+<span class="p">|</span><span class="w"> </span>fzf<span class="w"> </span>-n<span class="w"> </span><span class="m">2</span><span class="w"> </span>--header<span class="o">=</span><span class="s2">&quot;current branch: </span><span class="nv">$current_branch</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="p">|</span><span class="w"> </span>awk<span class="w"> </span><span class="s1">&#39;{ print $2 }&#39;</span><span class="k">)</span>
+
+git<span class="w"> </span>checkout<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$ref</span><span class="s2">&quot;</span>
+</pre></div>
+<p>This looks complicated, but most of it is plumbing to get the list of branches. It uses <code>git
+reflog</code>, <a href="https://github.com/BurntSushi/ripgrep">ripgrep</a> and awk to get a list of branches and the
+date they were last used, like this:</p>
+<pre><code>2023-03-21 latest-branch
+2023-03-14 old-branch
+2023-01-12 older-branch
+</code></pre>
+<p>Which fzf then sorts alphabetically and shows from the bottom up, so you see the most recent branch
+first. The <code>-n 2</code> flag tells fzf to search in the second field, i.e. the branch name.</p>
+<p>Usually I want to switch to the most recent branch, which will be the default item selected. With
+this script I can run it, quickly check if the branch is what I expected, and press enter to switch
+to it.</p>
+<h2 id="level-3-as-a-filter-in-a-larger-program">Level 3 - As a filter in a larger program</h2><p>We have lots of services with HTTP APIs and Swagger pages letting you poke at those
+APIs. I often want to open a service's swagger page, but I don't know it's address.</p>
+<p>I can get that information from an API, so I have python script like this:</p>
+<div class="hll"><pre><span></span><span class="c1"># get the service names from an API</span>
+<span class="n">fzf_input</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">service_names</span><span class="p">)</span>
+
+<span class="n">p</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s1">&#39;fzf&#39;</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="n">fzf_input</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">returncode</span><span class="p">)</span>
+<span class="n">selected_service_name</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+<span class="c1"># look up the service address for the selected name</span>
+<span class="c1"># and open it in a browser</span>
+</pre></div>
+<p>Shelling out to fzf is easy, especially in python since <code>subprocess.run</code> blocks until the program
+exits. This script shows me a list of services, I pick one, and it's Swagger page opens in my
+browser.</p>
+<p>These are just some of the ways I use fzf to create my own little world of terminal utilities.</p>
+<p>Speeding up these routine tasks isn't <em>really</em> about saving time. It's about staying focused and
+avoiding distractions. Clicking around a slow UI or a file explorer is prime distraction time for
+me.</p>
+
+      ]]>
+    </content>
+  </entry>
   
   <entry>
     <title>snds - a generative music thing</title>
@@ -447,27 +518,27 @@ command<span class="p">!</span> <span class="p">-</span>nargs<span class="p">=</
 <p>The issue here is that external styles aren't applied to SVGs in an img tag. The font is loaded from Google fonts via a stylesheet. For that to work, if the SVG is in an img tag, the <em>stylesheet itself</em> needs to be embedded inside the SVG.</p>
 <p>There's more than that however, an SVG in an img tag has to be <em>standalone</em>, it can't request external resources, including that font. The <em>font itself</em> also needs to be embedded inside the stylesheet. To do that we first need to turn the font file into a data URL.</p>
 <h3 id="creating-a-data-url-for-the-font">Creating a data URL for the font</h3><p>I used this script in the Firefox console to do this:</p>
-<div class="hll"><pre><span></span><span class="nx">resp</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">fetch</span><span class="p">(</span><span class="s1">&#39;https://fonts.gstatic.com/s/ranga/v8/C8cg4cYisGb28qY-AygW43w.woff2&#39;</span><span class="p">);</span>
-<span class="nx">blob</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">resp</span><span class="p">.</span><span class="nx">blob</span><span class="p">();</span>
-<span class="nx">f</span> <span class="o">=</span> <span class="ow">new</span> <span class="nx">FileReader</span><span class="p">();</span>
-<span class="nx">f</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s1">&#39;load&#39;</span><span class="p">,</span> <span class="p">()</span> <span class="p">=&gt;</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">f</span><span class="p">.</span><span class="nx">result</span><span class="p">));</span>
+<div class="hll"><pre><span></span><span class="nx">resp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">fetch</span><span class="p">(</span><span class="s1">&#39;https://fonts.gstatic.com/s/ranga/v8/C8cg4cYisGb28qY-AygW43w.woff2&#39;</span><span class="p">);</span>
+<span class="nx">blob</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">resp</span><span class="p">.</span><span class="nx">blob</span><span class="p">();</span>
+<span class="nx">f</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">FileReader</span><span class="p">();</span>
+<span class="nx">f</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s1">&#39;load&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">f</span><span class="p">.</span><span class="nx">result</span><span class="p">));</span>
 <span class="nx">f</span><span class="p">.</span><span class="nx">readAsDataURL</span><span class="p">(</span><span class="nx">blob</span><span class="p">);</span>
 </pre></div>
 <p>Replace the URL in <code>fetch()</code> with the URL to your font.</p>
 <h3 id="embedding-the-font-in-the-stylesheet">Embedding the font in the stylesheet</h3><p>This is easy, replace the URL in the <code>url()</code> call:</p>
-<div class="hll"><pre><span></span><span class="p">&lt;</span><span class="nt">style</span><span class="p">&gt;</span><span class="w"></span>
-<span class="w">  </span><span class="p">@</span><span class="k">font-face</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="nt">font-family</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Ranga&#39;</span><span class="o">;</span><span class="w"></span>
-<span class="w">    </span><span class="c">/* .. */</span><span class="w"></span>
-<span class="w">    </span><span class="nt">src</span><span class="o">:</span><span class="w"> </span><span class="nt">url</span><span class="o">(</span><span class="nt">data</span><span class="p">:</span><span class="nd">font</span><span class="o">/</span><span class="nt">woff2</span><span class="o">;</span><span class="nt">base64</span><span class="o">,....)</span><span class="w"> </span><span class="nt">format</span><span class="o">(</span><span class="s1">&#39;woff2&#39;</span><span class="o">);</span><span class="w"></span>
-<span class="w">  </span><span class="p">}</span><span class="w"></span>
+<div class="hll"><pre><span></span><span class="p">&lt;</span><span class="nt">style</span><span class="p">&gt;</span>
+<span class="w">  </span><span class="p">@</span><span class="k">font-face</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">font-family</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Ranga&#39;</span><span class="o">;</span>
+<span class="w">    </span><span class="c">/* .. */</span>
+<span class="w">    </span><span class="nt">src</span><span class="o">:</span><span class="w"> </span><span class="nt">url</span><span class="o">(</span><span class="nt">data</span><span class="p">:</span><span class="nd">font</span><span class="o">/</span><span class="nt">woff2</span><span class="o">;</span><span class="nt">base64</span><span class="o">,....)</span><span class="w"> </span><span class="nt">format</span><span class="o">(</span><span class="s1">&#39;woff2&#39;</span><span class="o">);</span>
+<span class="w">  </span><span class="p">}</span>
 <span class="p">&lt;/</span><span class="nt">style</span><span class="p">&gt;</span>
 </pre></div>
 <h3 id="embedding-the-stylesheet-in-the-svg">Embedding the stylesheet in the SVG</h3><p>This is easy too, add it to SVG inside a <code>&lt;defs&gt;</code> tag:</p>
 <div class="hll"><pre><span></span><span class="p">&lt;</span><span class="nt">svg</span> <span class="na">xmlns</span><span class="o">=</span><span class="s">&quot;http://www.w3.org/2000/svg&quot;</span><span class="p">&gt;</span>
   <span class="p">&lt;</span><span class="nt">defs</span><span class="p">&gt;</span>
-    <span class="p">&lt;</span><span class="nt">style</span><span class="p">&gt;</span><span class="w"></span>
-<span class="w">      </span><span class="p">@</span><span class="k">font-face</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="c">/* ... */</span><span class="w"> </span><span class="p">}</span><span class="w"></span>
+    <span class="p">&lt;</span><span class="nt">style</span><span class="p">&gt;</span>
+<span class="w">      </span><span class="p">@</span><span class="k">font-face</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="c">/* ... */</span><span class="w"> </span><span class="p">}</span>
 <span class="w">    </span><span class="p">&lt;/</span><span class="nt">style</span><span class="p">&gt;</span>
   <span class="p">&lt;/</span><span class="nt">defs</span><span class="p">&gt;</span>
   rest of SVG here...
@@ -475,29 +546,29 @@ command<span class="p">!</span> <span class="p">-</span>nargs<span class="p">=</
 </pre></div>
 <h3 id="and-the-rest">And the rest</h3><p>Now we're clear to do the rest of steps above:</p>
 <div class="hll"><pre><span></span><span class="c1">// convert the SVG to a data URL</span>
-<span class="kd">const</span> <span class="nx">svgText</span> <span class="o">=</span> <span class="ow">new</span> <span class="nx">XMLSerializer</span><span class="p">().</span><span class="nx">serializeToString</span><span class="p">(</span><span class="nx">svgElement</span><span class="p">);</span>
-<span class="kd">const</span> <span class="nx">dataUrl</span> <span class="o">=</span> <span class="sb">`data:image/svg+xml;charset=utf-8,</span><span class="si">${</span><span class="nb">encodeURIComponent</span><span class="p">(</span><span class="nx">svgText</span><span class="p">)</span><span class="si">}</span><span class="sb">`</span><span class="p">;</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">svgText</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">XMLSerializer</span><span class="p">().</span><span class="nx">serializeToString</span><span class="p">(</span><span class="nx">svgElement</span><span class="p">);</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">dataUrl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`data:image/svg+xml;charset=utf-8,</span><span class="si">${</span><span class="nb">encodeURIComponent</span><span class="p">(</span><span class="nx">svgText</span><span class="p">)</span><span class="si">}</span><span class="sb">`</span><span class="p">;</span>
 
 <span class="c1">// create an image for that data URL</span>
-<span class="kd">const</span> <span class="nx">img</span> <span class="o">=</span> <span class="ow">new</span> <span class="nx">Image</span><span class="p">();</span>
-<span class="nx">img</span><span class="p">.</span><span class="nx">src</span> <span class="o">=</span> <span class="nx">dataUrl</span><span class="p">;</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">img</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Image</span><span class="p">();</span>
+<span class="nx">img</span><span class="p">.</span><span class="nx">src</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">dataUrl</span><span class="p">;</span>
 
-<span class="nx">img</span><span class="p">.</span><span class="nx">onload</span> <span class="o">=</span> <span class="p">()</span> <span class="p">=&gt;</span> <span class="p">{</span>
-  <span class="c1">// create a canvas</span>
-  <span class="kd">const</span> <span class="nx">canvas</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;canvas&#39;</span><span class="p">);</span>
-  <span class="nx">canvas</span><span class="p">.</span><span class="nx">width</span> <span class="o">=</span> <span class="nx">svg</span><span class="p">.</span><span class="nx">getBoundingClientRect</span><span class="p">().</span><span class="nx">width</span><span class="p">;</span>
-  <span class="nx">canvas</span><span class="p">.</span><span class="nx">height</span> <span class="o">=</span> <span class="nx">svg</span><span class="p">.</span><span class="nx">getBoundingClientRect</span><span class="p">().</span><span class="nx">height</span><span class="p">;</span>
+<span class="nx">img</span><span class="p">.</span><span class="nx">onload</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// create a canvas</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">canvas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;canvas&#39;</span><span class="p">);</span>
+<span class="w">  </span><span class="nx">canvas</span><span class="p">.</span><span class="nx">width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">svg</span><span class="p">.</span><span class="nx">getBoundingClientRect</span><span class="p">().</span><span class="nx">width</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">canvas</span><span class="p">.</span><span class="nx">height</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">svg</span><span class="p">.</span><span class="nx">getBoundingClientRect</span><span class="p">().</span><span class="nx">height</span><span class="p">;</span>
 
-  <span class="c1">// draw the image on to the canvas</span>
-  <span class="kd">const</span> <span class="nx">ctx</span> <span class="o">=</span> <span class="nx">canvas</span><span class="p">.</span><span class="nx">getContext</span><span class="p">(</span><span class="s1">&#39;2d&#39;</span><span class="p">);</span>
-  <span class="nx">ctx</span><span class="p">.</span><span class="nx">drawImage</span><span class="p">(</span><span class="nx">img</span><span class="p">,</span> <span class="mf">0</span><span class="p">,</span> <span class="mf">0</span><span class="p">);</span>
+<span class="w">  </span><span class="c1">// draw the image on to the canvas</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">ctx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">canvas</span><span class="p">.</span><span class="nx">getContext</span><span class="p">(</span><span class="s1">&#39;2d&#39;</span><span class="p">);</span>
+<span class="w">  </span><span class="nx">ctx</span><span class="p">.</span><span class="nx">drawImage</span><span class="p">(</span><span class="nx">img</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">);</span>
 
-  <span class="c1">// do something with the canvas</span>
-  <span class="c1">// e.g. turn it into a PNG and add it to the document:</span>
-  <span class="kd">const</span> <span class="nx">pngUrl</span> <span class="o">=</span> <span class="nx">canvas</span><span class="p">.</span><span class="nx">toDataURL</span><span class="p">(</span><span class="s1">&#39;image/png&#39;</span><span class="p">);</span>
-  <span class="kd">const</span> <span class="nx">imgElement</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;img&#39;</span><span class="p">);</span>
-  <span class="nx">imgElement</span><span class="p">.</span><span class="nx">src</span> <span class="o">=</span> <span class="nx">pngUrl</span><span class="p">;</span>
-  <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">appendChild</span><span class="p">(</span><span class="nx">imgElement</span><span class="p">);</span>
+<span class="w">  </span><span class="c1">// do something with the canvas</span>
+<span class="w">  </span><span class="c1">// e.g. turn it into a PNG and add it to the document:</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">pngUrl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">canvas</span><span class="p">.</span><span class="nx">toDataURL</span><span class="p">(</span><span class="s1">&#39;image/png&#39;</span><span class="p">);</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">imgElement</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;img&#39;</span><span class="p">);</span>
+<span class="w">  </span><span class="nx">imgElement</span><span class="p">.</span><span class="nx">src</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">pngUrl</span><span class="p">;</span>
+<span class="w">  </span><span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">appendChild</span><span class="p">(</span><span class="nx">imgElement</span><span class="p">);</span>
 <span class="p">};</span>
 </pre></div>
 <p>Enjoy. I hope that saved you a wasted evening's hacking.</p>
@@ -553,34 +624,34 @@ command<span class="p">!</span> <span class="p">-</span>nargs<span class="p">=</
     <content type="html">
       <![CDATA[
       <p>I'm seeing a worrying pattern in TypeScript code in my day job: suspicious optional chaining. Consider this code that returns a user's name:</p>
-<div class="hll"><pre><span></span><span class="kd">function</span> <span class="nx">getName</span><span class="p">(</span><span class="nx">userId</span>: <span class="kt">number</span><span class="p">)</span><span class="o">:</span> <span class="kt">string</span> <span class="p">{</span>
-  <span class="kd">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="nx">fetchUser</span><span class="p">(</span><span class="nx">userId</span><span class="p">);</span>
-  <span class="k">return</span> <span class="nx">response</span><span class="o">?</span><span class="p">.</span><span class="nx">user</span><span class="o">?</span><span class="p">.</span><span class="nx">name</span> <span class="o">??</span> <span class="s1">&#39;Anonymous&#39;</span><span class="p">;</span>
+<div class="hll"><pre><span></span><span class="kd">function</span><span class="w"> </span><span class="nx">getName</span><span class="p">(</span><span class="nx">userId</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">)</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">response</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">fetchUser</span><span class="p">(</span><span class="nx">userId</span><span class="p">);</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nx">response</span><span class="o">?</span><span class="p">.</span><span class="nx">user</span><span class="o">?</span><span class="p">.</span><span class="nx">name</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="s1">&#39;Anonymous&#39;</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
 <p>This code seems very suspicious of it's data. Is the result from <code>fetchUser</code> really that untrustworthy, or did the developer use optional chaining every time <em>just in case</em>? We have no way of knowing without more information.</p>
 <p>Also, every optional chaining operator adds an implicit conditional, and this code has one answer to every else branch: return <code>'Anonymous'</code>. Is that always the correct behaviour? What if <code>response</code> is null, what if <code>user</code> is null? Again we have no way of knowing for sure.</p>
 <p>This suspicious code has become… suspicious.</p>
 <p>Let's rewrite this without optional chaining, starting with the first optional chaining operator.</p>
-<div class="hll"><pre><span></span><span class="kd">function</span> <span class="nx">getName</span><span class="p">(</span><span class="nx">userId</span>: <span class="kt">number</span><span class="p">)</span><span class="o">:</span> <span class="kt">string</span> <span class="p">{</span>
-  <span class="kd">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="nx">fetchUser</span><span class="p">(</span><span class="nx">userId</span><span class="p">);</span>
+<div class="hll"><pre><span></span><span class="kd">function</span><span class="w"> </span><span class="nx">getName</span><span class="p">(</span><span class="nx">userId</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">)</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">response</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">fetchUser</span><span class="p">(</span><span class="nx">userId</span><span class="p">);</span>
 
-  <span class="k">if</span> <span class="p">(</span><span class="nx">response</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="nx">response</span><span class="p">.</span><span class="nx">user</span><span class="o">?</span><span class="p">.</span><span class="nx">name</span> <span class="o">??</span> <span class="s1">&#39;Anonymous&#39;</span><span class="p">;</span>
-  <span class="p">}</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">response</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">response</span><span class="p">.</span><span class="nx">user</span><span class="o">?</span><span class="p">.</span><span class="nx">name</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="s1">&#39;Anonymous&#39;</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
 <p>What should we do if that condition isn't true? Is <code>response</code> ever falsy? We need to look at <code>fetchUser</code> to know. Let's say we do and it always returns a response, but if the user wasn't found the <code>user</code> property is null. We can adjust our condition to check for this.</p>
 <p>What about <code>name</code>? Do users always have a name? Let's say we check the API documentation and users can be anonymous, in which case their name is null. This confirms that <code>name</code> is always present but, if it's null, returning <code>'Anonymous'</code> is the correct behaviour.</p>
 <p>Armed with this information we can write this:</p>
-<div class="hll"><pre><span></span><span class="kd">function</span> <span class="nx">getName</span><span class="p">(</span><span class="nx">userId</span>: <span class="kt">number</span><span class="p">)</span><span class="o">:</span> <span class="kt">string</span> <span class="p">{</span>
-  <span class="kd">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="nx">fetchUser</span><span class="p">(</span><span class="nx">userId</span><span class="p">);</span>
+<div class="hll"><pre><span></span><span class="kd">function</span><span class="w"> </span><span class="nx">getName</span><span class="p">(</span><span class="nx">userId</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">)</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">response</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">fetchUser</span><span class="p">(</span><span class="nx">userId</span><span class="p">);</span>
 
-  <span class="k">if</span> <span class="p">(</span><span class="nx">response</span><span class="p">.</span><span class="nx">user</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="nx">response</span><span class="p">.</span><span class="nx">user</span><span class="p">.</span><span class="nx">name</span> <span class="o">??</span> <span class="s1">&#39;Anonymous&#39;</span><span class="p">;</span>
-  <span class="p">}</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">response</span><span class="p">.</span><span class="nx">user</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">response</span><span class="p">.</span><span class="nx">user</span><span class="p">.</span><span class="nx">name</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="s1">&#39;Anonymous&#39;</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span>
 
-  <span class="k">throw</span> <span class="ow">new</span> <span class="ne">Error</span><span class="p">(</span><span class="s1">&#39;User not found&#39;</span><span class="p">);</span>
+<span class="w">  </span><span class="k">throw</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="ne">Error</span><span class="p">(</span><span class="s1">&#39;User not found&#39;</span><span class="p">);</span>
 <span class="p">}</span>
 </pre></div>
 <p>This code is more in control of it's data. It knows which conditions need to be checked. We didn't set out to write code that does this, but were led to do so by removing the conditional chaining operators.</p>
@@ -836,40 +907,40 @@ mark {
   color: white;
 }
 </style><p>Here is a solution to a problem I've had a few times in TypeScript. I have a discriminated union:</p>
-<div class="hll"><pre><span></span><span class="kd">enum</span> <span class="nx">ObjKind</span> <span class="p">{</span>
-  <span class="nb">String</span><span class="p">,</span>
-  <span class="nb">Number</span><span class="p">,</span>
+<div class="hll"><pre><span></span><span class="kd">enum</span><span class="w"> </span><span class="nx">ObjKind</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nb">String</span><span class="p">,</span>
+<span class="w">  </span><span class="nb">Number</span><span class="p">,</span>
 <span class="p">}</span>
 
-<span class="kr">type</span> <span class="nx">ObjString</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="nx">kind</span>: <span class="kt">ObjKind.String</span><span class="p">;</span>
-  <span class="nx">str</span>: <span class="kt">string</span><span class="p">;</span>
+<span class="kr">type</span><span class="w"> </span><span class="nx">ObjString</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">kind</span><span class="o">:</span><span class="w"> </span><span class="kt">ObjKind.String</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">str</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
 <span class="p">}</span>
 
-<span class="kr">type</span> <span class="nx">ObjNumber</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="nx">kind</span>: <span class="kt">ObjKind.Number</span><span class="p">;</span>
-  <span class="nx">num</span>: <span class="kt">number</span><span class="p">;</span>
+<span class="kr">type</span><span class="w"> </span><span class="nx">ObjNumber</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">kind</span><span class="o">:</span><span class="w"> </span><span class="kt">ObjKind.Number</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">num</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span>
 <span class="p">}</span>
 
-<span class="kr">type</span> <span class="nx">Obj</span> <span class="o">=</span> <span class="nx">ObjString</span> <span class="o">|</span> <span class="nx">ObjNumber</span><span class="p">;</span>
+<span class="kr">type</span><span class="w"> </span><span class="nx">Obj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">ObjString</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="nx">ObjNumber</span><span class="p">;</span>
 </pre></div>
 <p>and I want a function <code>checkObj</code> that, if called like this:</p>
-<div class="hll"><pre><span></span><span class="kd">const</span> <span class="nx">someObj1</span>: <span class="kt">Obj</span> <span class="o">=</span> <span class="p">...;</span>
-<span class="kd">const</span> <span class="nx">someObj2</span>: <span class="kt">Obj</span> <span class="o">=</span> <span class="p">...;</span>
-<span class="kd">const</span> <span class="nx">str</span> <span class="o">=</span> <span class="nx">checkObj</span><span class="p">(</span><span class="nx">someObj1</span><span class="p">,</span> <span class="nx">ObjKind</span><span class="p">.</span><span class="nb">String</span><span class="p">);</span>
-<span class="kd">const</span> <span class="nx">num</span> <span class="o">=</span> <span class="nx">checkObj</span><span class="p">(</span><span class="nx">someObj2</span><span class="p">,</span> <span class="nx">ObjKind</span><span class="p">.</span><span class="nb">Number</span><span class="p">);</span>
+<div class="hll"><pre><span></span><span class="kd">const</span><span class="w"> </span><span class="nx">someObj1</span><span class="o">:</span><span class="w"> </span><span class="kt">Obj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">...;</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">someObj2</span><span class="o">:</span><span class="w"> </span><span class="kt">Obj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">...;</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">str</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">checkObj</span><span class="p">(</span><span class="nx">someObj1</span><span class="p">,</span><span class="w"> </span><span class="nx">ObjKind</span><span class="p">.</span><span class="nb">String</span><span class="p">);</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">checkObj</span><span class="p">(</span><span class="nx">someObj2</span><span class="p">,</span><span class="w"> </span><span class="nx">ObjKind</span><span class="p">.</span><span class="nb">Number</span><span class="p">);</span>
 </pre></div>
 <p>returns the correct type from the union. That is, I want <code>str</code> to be an <code>ObjString</code> and <code>num</code> to be an <code>ObjNumber</code>.</p>
 <h2 id="the-first-attempt">the first attempt</h2><p>This version of <code>checkObj</code> does <strong>not</strong> do this, but we'll build on it:</p>
-<div class="hll"><pre><span></span><span class="kd">function</span> <span class="nx">checkObj</span><span class="p">(</span><span class="nx">obj</span>: <span class="kt">Obj</span><span class="p">,</span> <span class="nx">kind</span>: <span class="kt">ObjKind</span><span class="p">)</span><span class="o">:</span> <span class="nx">Obj</span> <span class="p">{</span>
-  <span class="k">if</span> <span class="p">(</span><span class="nx">obj</span><span class="p">.</span><span class="nx">kind</span> <span class="o">!==</span> <span class="nx">kind</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">throw</span> <span class="ow">new</span> <span class="ne">Error</span><span class="p">(</span><span class="s1">&#39;type mismatch!&#39;</span><span class="p">);</span>
-  <span class="p">}</span>
-  <span class="k">return</span> <span class="nx">obj</span><span class="p">;</span>
+<div class="hll"><pre><span></span><span class="kd">function</span><span class="w"> </span><span class="nx">checkObj</span><span class="p">(</span><span class="nx">obj</span><span class="o">:</span><span class="w"> </span><span class="kt">Obj</span><span class="p">,</span><span class="w"> </span><span class="nx">kind</span><span class="o">:</span><span class="w"> </span><span class="kt">ObjKind</span><span class="p">)</span><span class="o">:</span><span class="w"> </span><span class="nx">Obj</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">obj</span><span class="p">.</span><span class="nx">kind</span><span class="w"> </span><span class="o">!==</span><span class="w"> </span><span class="nx">kind</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">throw</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="ne">Error</span><span class="p">(</span><span class="s1">&#39;type mismatch!&#39;</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nx">obj</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
 <p>This checks the type, but returns an <code>Obj</code>. To get the correct type, the caller needs to add a type assertion:</p>
-<div class="hll"><pre><span></span><span class="kd">const</span> <span class="nx">str</span> <span class="o">=</span> <span class="nx">checkObj</span><span class="p">(</span><span class="nx">someObj</span><span class="p">,</span> <span class="nx">ObjKind</span><span class="p">.</span><span class="nb">String</span><span class="p">)</span> <span class="kr">as</span> <span class="nx">ObjString</span><span class="p">;</span>
+<div class="hll"><pre><span></span><span class="kd">const</span><span class="w"> </span><span class="nx">str</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">checkObj</span><span class="p">(</span><span class="nx">someObj</span><span class="p">,</span><span class="w"> </span><span class="nx">ObjKind</span><span class="p">.</span><span class="nb">String</span><span class="p">)</span><span class="w"> </span><span class="kr">as</span><span class="w"> </span><span class="nx">ObjString</span><span class="p">;</span>
 </pre></div>
 <p>That relies on manually matching the <code>ObjKind</code> to the assertion, how do we get the type checker to do this for us?</p>
 <h2 id="the-solution">the solution</h2><p>To do this, we need to change the signature of the function. First we move <code>ObjKind</code> into a type parameter:</p>
@@ -889,14 +960,14 @@ function checkObj&lt;K extends ObjKind&gt;(
 <pre>
 return obj <mark>as Extract&lt;Obj, { kind: K }&gt;</mark>;
 </pre><p>Here's the finished function:</p>
-<div class="hll"><pre><span></span><span class="kd">function</span> <span class="nx">checkObj</span><span class="o">&lt;</span><span class="nx">K</span> <span class="k">extends</span> <span class="nx">ObjKind</span><span class="o">&gt;</span><span class="p">(</span>
-  <span class="nx">obj</span>: <span class="kt">Obj</span><span class="p">,</span>
-  <span class="nx">kind</span>: <span class="kt">K</span><span class="p">,</span>
-<span class="p">)</span><span class="o">:</span> <span class="nx">Extract</span><span class="o">&lt;</span><span class="nx">Obj</span><span class="p">,</span> <span class="p">{</span> <span class="nx">kind</span>: <span class="kt">K</span> <span class="p">}</span><span class="o">&gt;</span> <span class="p">{</span>
-  <span class="k">if</span> <span class="p">(</span><span class="nx">obj</span><span class="p">.</span><span class="nx">kind</span> <span class="o">!==</span> <span class="nx">kind</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">throw</span> <span class="ow">new</span> <span class="ne">Error</span><span class="p">(</span><span class="s1">&#39;type mismatch!&#39;</span><span class="p">);</span>
-  <span class="p">}</span>
-  <span class="k">return</span> <span class="nx">obj</span> <span class="kr">as</span> <span class="nx">Extract</span><span class="o">&lt;</span><span class="nx">Obj</span><span class="p">,</span> <span class="p">{</span> <span class="nx">kind</span>: <span class="kt">K</span> <span class="p">}</span><span class="o">&gt;</span><span class="p">;</span>
+<div class="hll"><pre><span></span><span class="kd">function</span><span class="w"> </span><span class="nx">checkObj</span><span class="o">&lt;</span><span class="nx">K</span><span class="w"> </span><span class="k">extends</span><span class="w"> </span><span class="nx">ObjKind</span><span class="o">&gt;</span><span class="p">(</span>
+<span class="w">  </span><span class="nx">obj</span><span class="o">:</span><span class="w"> </span><span class="kt">Obj</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">kind</span><span class="o">:</span><span class="w"> </span><span class="kt">K</span><span class="p">,</span>
+<span class="p">)</span><span class="o">:</span><span class="w"> </span><span class="nx">Extract</span><span class="o">&lt;</span><span class="nx">Obj</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">kind</span><span class="o">:</span><span class="w"> </span><span class="kt">K</span><span class="w"> </span><span class="p">}</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">obj</span><span class="p">.</span><span class="nx">kind</span><span class="w"> </span><span class="o">!==</span><span class="w"> </span><span class="nx">kind</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">throw</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="ne">Error</span><span class="p">(</span><span class="s1">&#39;type mismatch!&#39;</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nx">obj</span><span class="w"> </span><span class="kr">as</span><span class="w"> </span><span class="nx">Extract</span><span class="o">&lt;</span><span class="nx">Obj</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">kind</span><span class="o">:</span><span class="w"> </span><span class="kt">K</span><span class="w"> </span><span class="p">}</span><span class="o">&gt;</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
 <p>Hope that helps someone. Usually when I see types like this in TypeScript my eyes glaze over, but it was worth persisting a little to make more use of the type checker.</p>
@@ -950,18 +1021,18 @@ return obj <mark>as Extract&lt;Obj, { kind: K }&gt;</mark>;
       <![CDATA[
       <p>You may have heard of <a href="https://github.com/rupa/z">z</a> or <a href="https://github.com/ajeetdsouza/zoxide">zoxide</a>. These tools keep track of frequently visited directories and provide a command to jump to them. For example, if you are often in <code>/var/www</code> then executing <code>z www</code> will take you there from any directory.</p>
 <p>I present a tiny shell script alternative to these, <code>k</code>:</p>
-<div class="hll"><pre><span></span>k<span class="o">()</span> <span class="o">{</span>
-    <span class="k">if</span> <span class="o">[</span> -z <span class="nv">$1</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
-        <span class="nb">echo</span> <span class="nv">$PWD</span> &gt;&gt; ~/.k
-    <span class="k">else</span>
-        <span class="nv">K</span><span class="o">=</span>~/.k
-        <span class="k">case</span> <span class="nv">$1</span> <span class="k">in</span>
-        clean<span class="o">)</span>  sort <span class="nv">$K</span> <span class="p">|</span> uniq &gt; <span class="si">${</span><span class="nv">K</span><span class="si">}</span>.tmp <span class="o">&amp;&amp;</span> mv <span class="si">${</span><span class="nv">K</span><span class="si">}</span>.tmp <span class="si">${</span><span class="nv">K</span><span class="si">}</span><span class="p">;;</span>
-        rm<span class="o">)</span> sed -i -E <span class="s2">&quot;\#^</span><span class="si">${</span><span class="nv">PWD</span><span class="si">}</span><span class="s2">\$#d&quot;</span> <span class="si">${</span><span class="nv">K</span><span class="si">}</span><span class="p">;;</span>
-        ls<span class="o">)</span> cat <span class="si">${</span><span class="nv">K</span><span class="si">}</span><span class="p">;;</span>
-        *<span class="o">)</span>  <span class="nb">cd</span> <span class="s2">&quot;</span><span class="k">$(</span>grep -e <span class="s2">&quot;</span><span class="nv">$1</span><span class="s2">&quot;</span> <span class="si">${</span><span class="nv">K</span><span class="si">}</span> <span class="p">|</span> head -n <span class="m">1</span><span class="k">)</span><span class="s2">&quot;</span><span class="p">;;</span>
-        <span class="k">esac</span>
-    <span class="k">fi</span>
+<div class="hll"><pre><span></span>k<span class="o">()</span><span class="w"> </span><span class="o">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span>-z<span class="w"> </span><span class="nv">$1</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<span class="w">        </span><span class="nb">echo</span><span class="w"> </span><span class="nv">$PWD</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>~/.k
+<span class="w">    </span><span class="k">else</span>
+<span class="w">        </span><span class="nv">K</span><span class="o">=</span>~/.k
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="nv">$1</span><span class="w"> </span><span class="k">in</span>
+<span class="w">        </span>clean<span class="o">)</span><span class="w">  </span>sort<span class="w"> </span><span class="nv">$K</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>uniq<span class="w"> </span>&gt;<span class="w"> </span><span class="si">${</span><span class="nv">K</span><span class="si">}</span>.tmp<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>mv<span class="w"> </span><span class="si">${</span><span class="nv">K</span><span class="si">}</span>.tmp<span class="w"> </span><span class="si">${</span><span class="nv">K</span><span class="si">}</span><span class="p">;;</span>
+<span class="w">        </span>rm<span class="o">)</span><span class="w"> </span>sed<span class="w"> </span>-i<span class="w"> </span>-E<span class="w"> </span><span class="s2">&quot;\#^</span><span class="si">${</span><span class="nv">PWD</span><span class="si">}</span><span class="s2">\$#d&quot;</span><span class="w"> </span><span class="si">${</span><span class="nv">K</span><span class="si">}</span><span class="p">;;</span>
+<span class="w">        </span>ls<span class="o">)</span><span class="w"> </span>cat<span class="w"> </span><span class="si">${</span><span class="nv">K</span><span class="si">}</span><span class="p">;;</span>
+<span class="w">        </span>*<span class="o">)</span><span class="w">  </span><span class="nb">cd</span><span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>grep<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$1</span><span class="s2">&quot;</span><span class="w"> </span><span class="si">${</span><span class="nv">K</span><span class="si">}</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-n<span class="w"> </span><span class="m">1</span><span class="k">)</span><span class="s2">&quot;</span><span class="p">;;</span>
+<span class="w">        </span><span class="k">esac</span>
+<span class="w">    </span><span class="k">fi</span>
 <span class="o">}</span>
 </pre></div>
 <p>I've also created fish and (somewhat limited) batch script versions, available in <a href="https://gist.github.com/Alligator/11e5bb01c12c8ac8b74824d54d1ee560">this gist</a> along with the original.</p>
