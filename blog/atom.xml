@@ -5,12 +5,91 @@
   <link rel="alternate" type="text/html" href="https://alligatr.co.uk/blog"/>
   <link rel="self" type="application/atom+xml" href="https://alligatr.co.uk/blog/atom.xml"/>
   
-  <updated>2023-09-06T00:00:00Z</updated>
+  <updated>2024-02-13T00:00:00Z</updated>
   <id>https://alligatr.co.uk/blog</id>
   <author>
     <name>alligator</name>
   </author>
 
+  
+  <entry>
+    <title>Entity Framework 6 takes a power nap</title>
+    <link href="https://alligatr.co.uk/blog/ef6-40-mins/" />
+    <id>https://alligatr.co.uk/blog/ef6-40-mins/</id>
+    <updated>2024-02-13T00:00:00Z</updated>
+    <content type="html">
+      <![CDATA[
+      <p>Or "why do my EF6 migrations take so long to connect to the database?"</p>
+<p>A project at work still uses EF6. It also takes <em>ages</em> to run the migrations on all the production databases - 40 minutes! Even with no new migrations to run! It seemed to take 30 seconds just to connect to each database.</p>
+<p>We told ourselves "EF6 is old and unmaintained, one day we'll upgrade to EF core and the problem will solve itself". But that didn't sit right with me. There's got to be a reason.</p>
+<p>There is - EF6 spends most of those 40 minutes sleeping.</p>
+<h2 id="tl-dr">tl;dr</h2><ul>
+<li>The database account the project uses can't read from <code>master</code></li>
+<li>EF6 tries to read from <code>master</code> before running the migrations, to check the database exists</li>
+<li>This fails and hits some retry logic in <code>System.Data.SqlClient</code></li>
+<li>The retry logic attempts the connection 3 times, sleeping for 10 seconds after each failure</li>
+<li>EF6 apparently carries on, despite the failure</li>
+</ul>
+<p>30 seconds per production database = 40 sleepy minutes.</p>
+<h2 id="details">Details</h2><p>We use the SQL server database provider. Before EF6 runs the migrations, it calls <code>SqlProviderServices.CheckDatabaseExists</code>, presumably to check the database exists.</p>
+<p>Here's that method:</p>
+<div class="hll"><pre><span></span><span class="k">private</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="nf">CheckDatabaseExists</span><span class="p">(</span><span class="n">SqlConnection</span><span class="w"> </span><span class="n">sqlConnection</span><span class="p">,</span><span class="w"> </span><span class="kt">int?</span><span class="w"> </span><span class="n">commandTimeout</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="n">databaseName</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="kt">var</span><span class="w"> </span><span class="n">databaseExists</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">false</span><span class="p">;</span>
+<span class="w">  </span><span class="n">UsingMasterConnection</span><span class="p">(</span>
+<span class="w">    </span><span class="n">sqlConnection</span><span class="p">,</span><span class="w"> </span><span class="n">conn</span><span class="w"> </span><span class="o">=&gt;</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="kt">var</span><span class="w"> </span><span class="n">databaseExistsScript</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">SqlDdlBuilder</span><span class="p">.</span><span class="n">CreateDatabaseExistsScript</span><span class="p">(</span><span class="n">databaseName</span><span class="p">);</span>
+<span class="w">      </span><span class="k">using</span><span class="w"> </span><span class="p">(</span><span class="kt">var</span><span class="w"> </span><span class="n">command</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CreateCommand</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span><span class="w"> </span><span class="n">databaseExistsScript</span><span class="p">,</span><span class="w"> </span><span class="n">commandTimeout</span><span class="p">))</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="n">databaseExists</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">DbInterception</span><span class="p">.</span><span class="n">Dispatch</span><span class="p">.</span><span class="n">Command</span><span class="p">.</span><span class="n">Scalar</span><span class="p">(</span>
+<span class="w">        </span><span class="n">command</span><span class="p">,</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">DbCommandInterceptionContext</span><span class="p">())</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="m">1</span><span class="p">;</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">});</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">databaseExists</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+<p><a href="https://github.com/dotnet/ef6/blob/66414427586229202b0305ab9764f601e2a0b4d9/src/EntityFramework.SqlServer/SqlProviderServices.cs#L1371">source</a></p>
+<p>Note the call to <code>UseMasterConnection</code>. That attempts to connect to the <code>master</code> database.</p>
+<p>Here's the retry logic this hits in <code>System.Data.SqlClient</code>:</p>
+<div class="hll"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">connectionEstablishCount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">applyTransientFaultHandling</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">connectionOptions</span><span class="p">.</span><span class="n">ConnectRetryCount</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="m">1</span><span class="p">;</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">transientRetryIntervalInMilliSeconds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">connectionOptions</span><span class="p">.</span><span class="n">ConnectRetryInterval</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="m">1000</span><span class="p">;</span><span class="w"> </span><span class="c1">// Max value of transientRetryInterval is 60*1000 ms. The max value allowed for ConnectRetryInterval is 60</span>
+
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">connectionEstablishCount</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="k">try</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="n">OpenLoginEnlist</span><span class="p">(</span><span class="n">_timeout</span><span class="p">,</span><span class="w"> </span><span class="n">connectionOptions</span><span class="p">,</span><span class="w"> </span><span class="n">credential</span><span class="p">,</span><span class="w"> </span><span class="n">newPassword</span><span class="p">,</span><span class="w"> </span><span class="n">newSecurePassword</span><span class="p">,</span><span class="w"> </span><span class="n">redirectedUserInstance</span><span class="p">);</span>
+<span class="w">    </span><span class="k">break</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">SqlException</span><span class="w"> </span><span class="n">sqlex</span><span class="p">)</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">connectionEstablishCount</span>
+<span class="w">      </span><span class="o">||</span><span class="w"> </span><span class="o">!</span><span class="n">applyTransientFaultHandling</span>
+<span class="w">      </span><span class="o">||</span><span class="w"> </span><span class="n">_timeout</span><span class="p">.</span><span class="n">IsExpired</span>
+<span class="w">      </span><span class="o">||</span><span class="w"> </span><span class="n">_timeout</span><span class="p">.</span><span class="n">MillisecondsRemaining</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">transientRetryIntervalInMilliSeconds</span>
+<span class="w">      </span><span class="o">||</span><span class="w"> </span><span class="o">!</span><span class="n">IsTransientError</span><span class="p">(</span><span class="n">sqlex</span><span class="p">))</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="k">throw</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">else</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="n">Thread</span><span class="p">.</span><span class="n">Sleep</span><span class="p">(</span><span class="n">transientRetryIntervalInMilliSeconds</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+<p><a href="https://github.com/dotnet/SqlClient/blob/af7d39d4496c23fa1660c828a84f31680c0079fc/src/Microsoft.Data.SqlClient/netfx/src/Microsoft/Data/SqlClient/SqlInternalConnectionTds.cs#L540">source</a></p>
+<p><code>OpenLoginEnlist</code> fails and hits the catch block.</p>
+<p>Note the use of <code>connectionOptions.ConnectRetryCount</code> and <code>connectionOptions.ConnectRetryInterval</code>. We set <code>ConnectRetryCount</code> to 3 in our connection string, but leave <code>ConnectRetryInterval</code> unset, which defaults to 10. So this loop will retry 3 times, sleeping for 10 seconds each time.</p>
+<p>I'm not sure why a login failure is considered a transient error but apparently, it is.</p>
+<h2 id="solution">Solution</h2><p>We fixed this by giving our database users read-only access to <code>master</code>.</p>
+<p>You could also change the <code>ConnectRetryCount</code> and <code>ConnectRetryInterval</code> options in your connection string, to reduce or entirely stop the retry attempts.</p>
+<p>Or you could just let EF6 get some well deserved sleep. It is getting on a bit.</p>
+
+      ]]>
+    </content>
+  </entry>
   
   <entry>
     <title>A pickle of a Python ValueError</title>
