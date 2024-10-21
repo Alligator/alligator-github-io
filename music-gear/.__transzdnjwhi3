@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="../static/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>music gear - alligatr</title>
+</head>
+<body>
+  <header>
+    
+<h1>
+  Music gear
+</h1>
+
+  </header>
+  <div class="page">
+    
+  <p>These are some words about my music equipment. They're not quite reviews, but they're not not reviews.</p>
+
+  <h2>Contents</h2>
+  <ul>
+  
+    <li>Guitars</li>
+      <ul>
+      
+        <li><a href="#fender-mustang">Fender Vintera 60s Mustang</a></li>
+      
+        <li><a href="#fender-jaguar">Fender Jaguar</a></li>
+      
+        <li><a href="#soapshire">The Soapshire</a></li>
+      
+        <li><a href="#guyatone-mosrite">Guyatone LG127T</a></li>
+      
+      </ul>
+    </li>
+  
+    <li>Effects</li>
+      <ul>
+      
+        <li><a href="#ehx-eddy">EHX Eddy Chorus</a></li>
+      
+        <li><a href="#boss-hm2">Boss HM-2W</a></li>
+      
+      </ul>
+    </li>
+  
+    <li>Synths</li>
+      <ul>
+      
+      </ul>
+    </li>
+  
+  </ul>
+
+  
+  <h2>Guitars</h2>
+    
+    <h3 id="fender-mustang">Fender Vintera 60s Mustang</h2>
+    <p><p>I bought this new in 2022. I like it a lot.</p>
+<p>Like me, it's small, thin, and treble-y. It gets brighter the more you dig into it. It <em>wants</em> you to dig into it. I like a guitar with strong opinions, and this guitar is of the opinion that you can't sit on a sustaining E chord for 30 seconds.</p>
+<p>Setting it up filled me with despair. I was close to locking the vibrato unit down and forgetting it ever moved. I didn't, it works, it's stable, and I don't plan on touching it again. The grub screw that holds in the arm is metal, so it's metal pressing into metal. This makes no sense. Get yourself an M5 x 8mm nylon tipped grub screw instead.</p>
+</p>
+    
+    <h3 id="fender-jaguar">Fender Jaguar</h2>
+    <p><p>I bought this second hand ages ago. It's a CIJ one from the 90s.</p>
+<p>I've been playing this guitar for so long that I have no perspective on it. It feels like the default good guitar. Mine has some modifications.</p>
+<p>It has a Seymour Duncan quarter pound in the bridge. It sounds humbucker-esque and makes this guitar manageable - before it had an AVRI 65 pickup and it was <em>bright</em>. I also have the rhythm circuit disconnected, but flipping the switch routes the signal through a pair of schottky diodes - like a budget black ice distortion. It doesn't do much, the pickups aren't high enough output. It also has a <a href="https://www.staytrem.com/store/staytrem-tremolo-for-jaguar-jazzmaster">staytrem</a>. If you have a Jaguar or a Jazzmaster, you should get one.</p>
+<p>If the Mustang is like a small, light, slow car that's fun to drive without breaking the speed limit, the Jaguar is like a luxury car from the 60s with strange features that weren't practical then, and are even less so now.</p>
+</p>
+    
+    <h3 id="soapshire">The Soapshire</h2>
+    <p><p>This is a ~2010 reissue Epiphone Wilshire. It has all white hardware, including blank white pickup covers, which is where it gets its name.</p>
+<p>This guitar is thin and light, and I like it for that. Otherwise it's a double cutaway through-neck guitar with two humbuckers. You know what this is, and what it does. The neck is wide and flat and I find it uncomfortable.</p>
+</p>
+    
+    <h3 id="guyatone-mosrite">Guyatone LG127T</h2>
+    <p><p>This is a 70s (I think) Mosrite copy. It plays way better than it has any right to, which is a credit to the previous owner.</p>
+<p>It has a copy Jaguar vibrato unit that's decent, and two P90-esque pickups. Of all my guitars, this one sounds the most like itself. The pickups are bright, and slightly hollow, they remind me of danelectro pickups. It also has the most bizarre tone circuit.</p>
+<p>It uses a stepped potentiometer - each position on the pot selects a different capacitor in a resistor-capacitor filter circuit, and sounds like you're sweeping a notch filter from low-mids to high-mids. There's a switch that seems to flip the filter, so one way it's cutting a frequency, the other it's cutting all the other frequencies. The last position sounds like a battery dying, which could be the signal running through some diodes.</p>
+</p>
+    
+  
+  <h2>Effects</h2>
+    
+    <h3 id="ehx-eddy">EHX Eddy Chorus</h2>
+    <p><p>I bought this after my Small Clone died and I failed to fix it. It has some quirks.</p>
+<p>It sounds like the small clone, but has more options. The vibrato is nice, you can get some great warped-vinyl sounds, especially by changing the shape of the curve. One of it's quirks is that is eats treble. Through an amp this isn't that noticeable, but through an audio interface it's very noticeable. That leads me to it's odd, second quirk - I can use it like a wonky amp simulator.</p>
+<p>If you run a distortion or fuzz pedal directly into an audio interface with no processing, it will sound incredibly fizzy. There's a wall of white noise that usually an amp (or amp sim) chops off. This pedal does the same. I think it even boosts the bass.</p>
+</p>
+    
+    <h3 id="boss-hm2">Boss HM-2W</h2>
+    <p><p>I use this as my main overdrive. With the distorion low it makes everything sound bigger. I basically never turn the distortion up past 9 o'clock - it gets quite... <em>scandinavian</em> up there. I like putting this after any fuzz pedals, so the HM-2's EQ has the final say and everything sounds consistent.</p>
+<p>I have the recent reissue, but I've used the original and the Behringer HM300 before. They all work as well as each other.</p>
+</p>
+    
+  
+  <h2>Synths</h2>
+    
+  
+
+<footer>
+  <p>
+    by <a href="../">alligator</a>
+  <p>
+</footer>
+
+  </div>
+  <script data-goatcounter="https://alligator.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ANSI escape codes</title>
+  <style>
+body {
+  background: black;
+  color: white;
+  font-family: monospace;
+  font-size: 1rem;
+}
+h1, h2 {
+  font-size: 1rem;
+  font-weight: bold;
+}
+h1 { padding: 0; margin: 1ex 0 }
+h2 { padding: 0; margin: 0 }
+
+a, a:visited {
+  color: cornflowerblue;
+}
+
+
+.code {
+  display: flex;
+  gap: 1rem;
+  cursor: pointer;
+}
+
+.code:hover {
+  background-color: white;
+  color: black;
+}
+
+.code > .desc {
+  color: #ccc;
+  font-weight: bold;
+  max-width: 20rem;
+}
+
+.code > div:first-child {
+  min-width: 10ex;
+}
+
+.columns {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.copied {
+  visibility: hidden;
+  position: absolute;
+  background: white;
+  color: black;
+  width: 10ex;
+}
+
+@keyframes blink {
+  0% {
+    opacity: 100%;
+  }
+  49% {
+    opacity: 100%;
+  }
+  50% {
+    opacity: 90%;
+  }
+  100% {
+    opacity: 90%;
+  }
+}
+  </style>
+  <script>
+window.onload = () => {
+  const copiedOverlay = document.querySelector('.copied');
+  let timeout = null;
+
+  document.querySelectorAll('.code').forEach((el) => el.addEventListener('click', (evt) => {
+    const code = el.querySelector('div:first-child').textContent.trim();
+    navigator.clipboard.writeText(code);
+
+    const elPos = el.getBoundingClientRect();
+    copiedOverlay.style.top = `${elPos.top}px`;
+    copiedOverlay.style.left = `${elPos.left}px`;
+    copiedOverlay.style.visibility = 'visible';
+
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+
+    timeout = setTimeout(() => {
+      copiedOverlay.style.visibility = 'hidden';
+      timeout = null;
+    }, 1000);
+  }));
+};
+  </script>
+</head>
+<body>
+  <h1>
+    ANSI escape codes - click to copy - by <a href="https://alligatr.co.uk">alligator</a>
+  </h1>
+
+  <div class="copied">copied!</div>
+
+  <div class="columns">
+    <div class="col">
+      <h2>cursor</h2>
+      
+        
+
+        <div class="code">
+          <div>\x1b[nA</div>
+          <div class="desc">cursor up</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[nB</div>
+          <div class="desc">cursor down</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[nC</div>
+          <div class="desc">cursor forward</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[nD</div>
+          <div class="desc">cursor back</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[nE</div>
+          <div class="desc">cursor next line</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[nF</div>
+          <div class="desc">cursor prev line</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[nG</div>
+          <div class="desc">cursor to col</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[n;mH</div>
+          <div class="desc">cursor to pos</div>
+        </div>
+      
+        
+          <br />
+        
+
+        <div class="code">
+          <div>\x1b[0J</div>
+          <div class="desc">erase cursor to end of screen</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[1J</div>
+          <div class="desc">erase cursor to start of screen</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[2J</div>
+          <div class="desc">erase entire screen</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[3J</div>
+          <div class="desc">erase entire screen + scrollback</div>
+        </div>
+      
+        
+          <br />
+        
+
+        <div class="code">
+          <div>\x1b[0K</div>
+          <div class="desc">erase cursor to end of line</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[1K</div>
+          <div class="desc">erase cursor to start of line</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[2K</div>
+          <div class="desc">erase entire line</div>
+        </div>
+      
+        
+          <br />
+        
+
+        <div class="code">
+          <div>\x1b[nS</div>
+          <div class="desc">scroll up</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[nT</div>
+          <div class="desc">scroll down</div>
+        </div>
+      
+    </div>
+
+    <div class="col">
+      <h2>colour</h2>
+      
+        
+
+        <div class="code">
+          <div>\x1b[0m</div>
+          <div class="desc" style="">style reset</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[31m</div>
+          <div class="desc" style="color: rgb(222, 56, 43)">red fg</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[32m</div>
+          <div class="desc" style="color: rgb(57, 181, 74)">green fg</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[33m</div>
+          <div class="desc" style="color: rgb(255, 199, 6)">yellow fg</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[34m</div>
+          <div class="desc" style="color: rgb(0, 111, 184 )">blue fg</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[35m</div>
+          <div class="desc" style="color: rgb(136, 23, 152)">magenta fg</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[36m</div>
+          <div class="desc" style="color: rgb(44, 181, 233)">cyan fg</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[37m</div>
+          <div class="desc" style="color: rgb(204, 204, 204)">white fg</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[90m</div>
+          <div class="desc" style="color: rgb(128, 128, 128">gray fg</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[91m</div>
+          <div class="desc" style="color: rgb(255,0,0)">bright red fg</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[92m</div>
+          <div class="desc" style="color: rgb(0, 255, 0)">bright green fg</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[93m</div>
+          <div class="desc" style="color: rgb(255, 255, 0)">bright yellow fg</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[94m</div>
+          <div class="desc" style="color: rgb(85, 85, 255)">bright blue fg</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[95m</div>
+          <div class="desc" style="color: rgb(255, 0, 255)">bright magenta fg</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[96m</div>
+          <div class="desc" style="color: rgb(0, 255, 255)">bright cyan fg</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[97m</div>
+          <div class="desc" style="color: white">bright white fg</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[41m</div>
+          <div class="desc" style="color: white; background: rgb(222, 56, 43)">red bg</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[42m</div>
+          <div class="desc" style="color: white; background: rgb(57, 181, 74)">green bg</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[43m</div>
+          <div class="desc" style="color: black; background: rgb(255, 199, 6)">yellow bg</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[44m</div>
+          <div class="desc" style="color: white; background: rgb(0, 111, 184 )">blue bg</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[45m</div>
+          <div class="desc" style="color: white; background: rgb(136, 23, 152)">magenta bg</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[46m</div>
+          <div class="desc" style="color: white; background: rgb(44, 181, 233)">cyan bg</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[47m</div>
+          <div class="desc" style="color: black; background: rgb(204, 204, 204)">white bg</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[100m</div>
+          <div class="desc" style="color: white; background: rgb(128, 128, 128)">gray bg</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[101m</div>
+          <div class="desc" style="color: black; background: rgb(255, 0, 0 )">bright red bg</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[102m</div>
+          <div class="desc" style="color: black; background: rgb(0, 255, 0)">bright green bg</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[103m</div>
+          <div class="desc" style="color: black; background: rgb(255, 255, 0)">bright yellow bg</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[104m</div>
+          <div class="desc" style="color: white; background: rgb(85, 85, 255)">bright blue bg</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[105m</div>
+          <div class="desc" style="color: black; background: rgb(255, 0, 255)">bright magenta bg</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[106m</div>
+          <div class="desc" style="color: black; background: rgb(0, 255, 255)">bright cyan bg</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[107m</div>
+          <div class="desc" style="color: black; background: white">bright white bg</div>
+        </div>
+      
+        
+          <br />
+        
+
+        <div class="code">
+          <div>\x1b[38;5;nm</div>
+          <div class="desc" style="">256 colour fg</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[48;5;nm</div>
+          <div class="desc" style="">256 colour bg</div>
+        </div>
+      
+        
+          <br />
+        
+
+        <div class="code">
+          <div>\x1b[38;2;r;g;b m</div>
+          <div class="desc" style="">rgb fg</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[48;2;r;g;b m</div>
+          <div class="desc" style="">rgb bg</div>
+        </div>
+      
+    </div>
+
+    <div class="col">
+      <h2>style</h2>
+      
+        
+
+        <div class="code">
+          <div>\x1b[1</div>
+          <div class="desc" style="font-weight: bold">bold</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[2</div>
+          <div class="desc" style="color: #888">dim</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[3</div>
+          <div class="desc" style="font-style: italic">italic</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[4</div>
+          <div class="desc" style="text-decoration: underline">underlined</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[5</div>
+          <div class="desc" style="">slow blink</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[6</div>
+          <div class="desc" style="">fast blink (rare)</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[7</div>
+          <div class="desc" style="color: black; background: white">reverse video</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[8</div>
+          <div class="desc" style="">hide (rare)</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[9</div>
+          <div class="desc" style="text-decoration: line-through">strike-thru (rare)</div>
+        </div>
+      
+        
+
+        <div class="code">
+          <div>\x1b[20</div>
+          <div class="desc" style="">𝔣𝔯𝔞𝔨𝔱𝔲𝔯 (𝔢𝔵𝔠𝔢𝔢𝔡𝔦𝔫𝔤𝔩𝔶 𝔯𝔞𝔯𝔢)</div>
+        </div>
+      
+    </div>
+  </div>
+
+</body>
+</html>

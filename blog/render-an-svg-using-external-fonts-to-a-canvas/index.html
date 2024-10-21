@@ -42,34 +42,34 @@ Aug 24, 2021
 </ol>
 <p>A simple, not convoluted at all, 5 step process.</p>
 <p>Here is what the image should have been:</p>
-<p><img src="normal.png" alt="&#34;normal&#34; in a cursive font with two underlines"></p>
+<p><img src="normal.png" alt="&quot;normal&quot; in a cursive font with two underlines"></p>
 <p>and instead this was the result:</p>
-<p><img src="norm.png" alt="&#34;norm&#34; in a serif font with two underlines"></p>
+<p><img src="norm.png" alt="&quot;norm&quot; in a serif font with two underlines"></p>
 <p>Hmm. This is anything but the norm.</p>
 <p>The issue here is that external styles aren't applied to SVGs in an img tag. The font is loaded from Google fonts via a stylesheet. For that to work, if the SVG is in an img tag, the <em>stylesheet itself</em> needs to be embedded inside the SVG.</p>
 <p>There's more than that however, an SVG in an img tag has to be <em>standalone</em>, it can't request external resources, including that font. The <em>font itself</em> also needs to be embedded inside the stylesheet. To do that we first need to turn the font file into a data URL.</p>
 <h3 id="creating-a-data-url-for-the-font">Creating a data URL for the font</h3><p>I used this script in the Firefox console to do this:</p>
-<div class="hll"><pre><span></span><span class="nx">resp</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">fetch</span><span class="p">(</span><span class="s1">&#39;https://fonts.gstatic.com/s/ranga/v8/C8cg4cYisGb28qY-AygW43w.woff2&#39;</span><span class="p">);</span>
-<span class="nx">blob</span> <span class="o">=</span> <span class="k">await</span> <span class="nx">resp</span><span class="p">.</span><span class="nx">blob</span><span class="p">();</span>
-<span class="nx">f</span> <span class="o">=</span> <span class="ow">new</span> <span class="nx">FileReader</span><span class="p">();</span>
-<span class="nx">f</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s1">&#39;load&#39;</span><span class="p">,</span> <span class="p">()</span> <span class="p">=&gt;</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">f</span><span class="p">.</span><span class="nx">result</span><span class="p">));</span>
+<div class="hll"><pre><span></span><span class="nx">resp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">fetch</span><span class="p">(</span><span class="s1">&#39;https://fonts.gstatic.com/s/ranga/v8/C8cg4cYisGb28qY-AygW43w.woff2&#39;</span><span class="p">);</span>
+<span class="nx">blob</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">resp</span><span class="p">.</span><span class="nx">blob</span><span class="p">();</span>
+<span class="nx">f</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">FileReader</span><span class="p">();</span>
+<span class="nx">f</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s1">&#39;load&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">f</span><span class="p">.</span><span class="nx">result</span><span class="p">));</span>
 <span class="nx">f</span><span class="p">.</span><span class="nx">readAsDataURL</span><span class="p">(</span><span class="nx">blob</span><span class="p">);</span>
 </pre></div>
 <p>Replace the URL in <code>fetch()</code> with the URL to your font.</p>
 <h3 id="embedding-the-font-in-the-stylesheet">Embedding the font in the stylesheet</h3><p>This is easy, replace the URL in the <code>url()</code> call:</p>
-<div class="hll"><pre><span></span><span class="p">&lt;</span><span class="nt">style</span><span class="p">&gt;</span><span class="w"></span>
-<span class="w">  </span><span class="p">@</span><span class="k">font-face</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="nt">font-family</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Ranga&#39;</span><span class="o">;</span><span class="w"></span>
-<span class="w">    </span><span class="c">/* .. */</span><span class="w"></span>
-<span class="w">    </span><span class="nt">src</span><span class="o">:</span><span class="w"> </span><span class="nt">url</span><span class="o">(</span><span class="nt">data</span><span class="p">:</span><span class="nd">font</span><span class="o">/</span><span class="nt">woff2</span><span class="o">;</span><span class="nt">base64</span><span class="o">,....)</span><span class="w"> </span><span class="nt">format</span><span class="o">(</span><span class="s1">&#39;woff2&#39;</span><span class="o">);</span><span class="w"></span>
-<span class="w">  </span><span class="p">}</span><span class="w"></span>
+<div class="hll"><pre><span></span><span class="p">&lt;</span><span class="nt">style</span><span class="p">&gt;</span>
+<span class="w">  </span><span class="p">@</span><span class="k">font-face</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">font-family</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Ranga&#39;</span><span class="o">;</span>
+<span class="w">    </span><span class="c">/* .. */</span>
+<span class="w">    </span><span class="nt">src</span><span class="o">:</span><span class="w"> </span><span class="nt">url</span><span class="o">(</span><span class="nt">data</span><span class="p">:</span><span class="nd">font</span><span class="o">/</span><span class="nt">woff2</span><span class="o">;</span><span class="nt">base64</span><span class="o">,....)</span><span class="w"> </span><span class="nt">format</span><span class="o">(</span><span class="s1">&#39;woff2&#39;</span><span class="o">);</span>
+<span class="w">  </span><span class="p">}</span>
 <span class="p">&lt;/</span><span class="nt">style</span><span class="p">&gt;</span>
 </pre></div>
 <h3 id="embedding-the-stylesheet-in-the-svg">Embedding the stylesheet in the SVG</h3><p>This is easy too, add it to SVG inside a <code>&lt;defs&gt;</code> tag:</p>
 <div class="hll"><pre><span></span><span class="p">&lt;</span><span class="nt">svg</span> <span class="na">xmlns</span><span class="o">=</span><span class="s">&quot;http://www.w3.org/2000/svg&quot;</span><span class="p">&gt;</span>
   <span class="p">&lt;</span><span class="nt">defs</span><span class="p">&gt;</span>
-    <span class="p">&lt;</span><span class="nt">style</span><span class="p">&gt;</span><span class="w"></span>
-<span class="w">      </span><span class="p">@</span><span class="k">font-face</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="c">/* ... */</span><span class="w"> </span><span class="p">}</span><span class="w"></span>
+    <span class="p">&lt;</span><span class="nt">style</span><span class="p">&gt;</span>
+<span class="w">      </span><span class="p">@</span><span class="k">font-face</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="c">/* ... */</span><span class="w"> </span><span class="p">}</span>
 <span class="w">    </span><span class="p">&lt;/</span><span class="nt">style</span><span class="p">&gt;</span>
   <span class="p">&lt;/</span><span class="nt">defs</span><span class="p">&gt;</span>
   rest of SVG here...
@@ -77,29 +77,29 @@ Aug 24, 2021
 </pre></div>
 <h3 id="and-the-rest">And the rest</h3><p>Now we're clear to do the rest of steps above:</p>
 <div class="hll"><pre><span></span><span class="c1">// convert the SVG to a data URL</span>
-<span class="kd">const</span> <span class="nx">svgText</span> <span class="o">=</span> <span class="ow">new</span> <span class="nx">XMLSerializer</span><span class="p">().</span><span class="nx">serializeToString</span><span class="p">(</span><span class="nx">svgElement</span><span class="p">);</span>
-<span class="kd">const</span> <span class="nx">dataUrl</span> <span class="o">=</span> <span class="sb">`data:image/svg+xml;charset=utf-8,</span><span class="si">${</span><span class="nb">encodeURIComponent</span><span class="p">(</span><span class="nx">svgText</span><span class="p">)</span><span class="si">}</span><span class="sb">`</span><span class="p">;</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">svgText</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">XMLSerializer</span><span class="p">().</span><span class="nx">serializeToString</span><span class="p">(</span><span class="nx">svgElement</span><span class="p">);</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">dataUrl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`data:image/svg+xml;charset=utf-8,</span><span class="si">${</span><span class="nb">encodeURIComponent</span><span class="p">(</span><span class="nx">svgText</span><span class="p">)</span><span class="si">}</span><span class="sb">`</span><span class="p">;</span>
 
 <span class="c1">// create an image for that data URL</span>
-<span class="kd">const</span> <span class="nx">img</span> <span class="o">=</span> <span class="ow">new</span> <span class="nx">Image</span><span class="p">();</span>
-<span class="nx">img</span><span class="p">.</span><span class="nx">src</span> <span class="o">=</span> <span class="nx">dataUrl</span><span class="p">;</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">img</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Image</span><span class="p">();</span>
+<span class="nx">img</span><span class="p">.</span><span class="nx">src</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">dataUrl</span><span class="p">;</span>
 
-<span class="nx">img</span><span class="p">.</span><span class="nx">onload</span> <span class="o">=</span> <span class="p">()</span> <span class="p">=&gt;</span> <span class="p">{</span>
-  <span class="c1">// create a canvas</span>
-  <span class="kd">const</span> <span class="nx">canvas</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;canvas&#39;</span><span class="p">);</span>
-  <span class="nx">canvas</span><span class="p">.</span><span class="nx">width</span> <span class="o">=</span> <span class="nx">svg</span><span class="p">.</span><span class="nx">getBoundingClientRect</span><span class="p">().</span><span class="nx">width</span><span class="p">;</span>
-  <span class="nx">canvas</span><span class="p">.</span><span class="nx">height</span> <span class="o">=</span> <span class="nx">svg</span><span class="p">.</span><span class="nx">getBoundingClientRect</span><span class="p">().</span><span class="nx">height</span><span class="p">;</span>
+<span class="nx">img</span><span class="p">.</span><span class="nx">onload</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// create a canvas</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">canvas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;canvas&#39;</span><span class="p">);</span>
+<span class="w">  </span><span class="nx">canvas</span><span class="p">.</span><span class="nx">width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">svg</span><span class="p">.</span><span class="nx">getBoundingClientRect</span><span class="p">().</span><span class="nx">width</span><span class="p">;</span>
+<span class="w">  </span><span class="nx">canvas</span><span class="p">.</span><span class="nx">height</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">svg</span><span class="p">.</span><span class="nx">getBoundingClientRect</span><span class="p">().</span><span class="nx">height</span><span class="p">;</span>
 
-  <span class="c1">// draw the image on to the canvas</span>
-  <span class="kd">const</span> <span class="nx">ctx</span> <span class="o">=</span> <span class="nx">canvas</span><span class="p">.</span><span class="nx">getContext</span><span class="p">(</span><span class="s1">&#39;2d&#39;</span><span class="p">);</span>
-  <span class="nx">ctx</span><span class="p">.</span><span class="nx">drawImage</span><span class="p">(</span><span class="nx">img</span><span class="p">,</span> <span class="mf">0</span><span class="p">,</span> <span class="mf">0</span><span class="p">);</span>
+<span class="w">  </span><span class="c1">// draw the image on to the canvas</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">ctx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">canvas</span><span class="p">.</span><span class="nx">getContext</span><span class="p">(</span><span class="s1">&#39;2d&#39;</span><span class="p">);</span>
+<span class="w">  </span><span class="nx">ctx</span><span class="p">.</span><span class="nx">drawImage</span><span class="p">(</span><span class="nx">img</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">);</span>
 
-  <span class="c1">// do something with the canvas</span>
-  <span class="c1">// e.g. turn it into a PNG and add it to the document:</span>
-  <span class="kd">const</span> <span class="nx">pngUrl</span> <span class="o">=</span> <span class="nx">canvas</span><span class="p">.</span><span class="nx">toDataURL</span><span class="p">(</span><span class="s1">&#39;image/png&#39;</span><span class="p">);</span>
-  <span class="kd">const</span> <span class="nx">imgElement</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;img&#39;</span><span class="p">);</span>
-  <span class="nx">imgElement</span><span class="p">.</span><span class="nx">src</span> <span class="o">=</span> <span class="nx">pngUrl</span><span class="p">;</span>
-  <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">appendChild</span><span class="p">(</span><span class="nx">imgElement</span><span class="p">);</span>
+<span class="w">  </span><span class="c1">// do something with the canvas</span>
+<span class="w">  </span><span class="c1">// e.g. turn it into a PNG and add it to the document:</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">pngUrl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">canvas</span><span class="p">.</span><span class="nx">toDataURL</span><span class="p">(</span><span class="s1">&#39;image/png&#39;</span><span class="p">);</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">imgElement</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;img&#39;</span><span class="p">);</span>
+<span class="w">  </span><span class="nx">imgElement</span><span class="p">.</span><span class="nx">src</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">pngUrl</span><span class="p">;</span>
+<span class="w">  </span><span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">appendChild</span><span class="p">(</span><span class="nx">imgElement</span><span class="p">);</span>
 <span class="p">};</span>
 </pre></div>
 <p>Enjoy. I hope that saved you a wasted evening's hacking.</p>
