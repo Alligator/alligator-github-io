@@ -23,34 +23,34 @@ Aug 9, 2021
   
 
   <p>I'm seeing a worrying pattern in TypeScript code in my day job: suspicious optional chaining. Consider this code that returns a user's name:</p>
-<div class="hll"><pre><span></span><span class="kd">function</span><span class="w"> </span><span class="nx">getName</span><span class="p">(</span><span class="nx">userId</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">)</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">response</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">fetchUser</span><span class="p">(</span><span class="nx">userId</span><span class="p">);</span>
-<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nx">response</span><span class="o">?</span><span class="p">.</span><span class="nx">user</span><span class="o">?</span><span class="p">.</span><span class="nx">name</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="s1">&#39;Anonymous&#39;</span><span class="p">;</span>
+<div class="hll"><pre><span></span><span class="kd">function</span> <span class="nx">getName</span><span class="p">(</span><span class="nx">userId</span>: <span class="kt">number</span><span class="p">)</span><span class="o">:</span> <span class="kt">string</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="nx">fetchUser</span><span class="p">(</span><span class="nx">userId</span><span class="p">);</span>
+  <span class="k">return</span> <span class="nx">response</span><span class="o">?</span><span class="p">.</span><span class="nx">user</span><span class="o">?</span><span class="p">.</span><span class="nx">name</span> <span class="o">??</span> <span class="s1">&#39;Anonymous&#39;</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
 <p>This code seems very suspicious of it's data. Is the result from <code>fetchUser</code> really that untrustworthy, or did the developer use optional chaining every time <em>just in case</em>? We have no way of knowing without more information.</p>
 <p>Also, every optional chaining operator adds an implicit conditional, and this code has one answer to every else branch: return <code>'Anonymous'</code>. Is that always the correct behaviour? What if <code>response</code> is null, what if <code>user</code> is null? Again we have no way of knowing for sure.</p>
 <p>This suspicious code has become… suspicious.</p>
 <p>Let's rewrite this without optional chaining, starting with the first optional chaining operator.</p>
-<div class="hll"><pre><span></span><span class="kd">function</span><span class="w"> </span><span class="nx">getName</span><span class="p">(</span><span class="nx">userId</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">)</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">response</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">fetchUser</span><span class="p">(</span><span class="nx">userId</span><span class="p">);</span>
+<div class="hll"><pre><span></span><span class="kd">function</span> <span class="nx">getName</span><span class="p">(</span><span class="nx">userId</span>: <span class="kt">number</span><span class="p">)</span><span class="o">:</span> <span class="kt">string</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="nx">fetchUser</span><span class="p">(</span><span class="nx">userId</span><span class="p">);</span>
 
-<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">response</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">response</span><span class="p">.</span><span class="nx">user</span><span class="o">?</span><span class="p">.</span><span class="nx">name</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="s1">&#39;Anonymous&#39;</span><span class="p">;</span>
-<span class="w">  </span><span class="p">}</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">response</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">response</span><span class="p">.</span><span class="nx">user</span><span class="o">?</span><span class="p">.</span><span class="nx">name</span> <span class="o">??</span> <span class="s1">&#39;Anonymous&#39;</span><span class="p">;</span>
+  <span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
 <p>What should we do if that condition isn't true? Is <code>response</code> ever falsy? We need to look at <code>fetchUser</code> to know. Let's say we do and it always returns a response, but if the user wasn't found the <code>user</code> property is null. We can adjust our condition to check for this.</p>
 <p>What about <code>name</code>? Do users always have a name? Let's say we check the API documentation and users can be anonymous, in which case their name is null. This confirms that <code>name</code> is always present but, if it's null, returning <code>'Anonymous'</code> is the correct behaviour.</p>
 <p>Armed with this information we can write this:</p>
-<div class="hll"><pre><span></span><span class="kd">function</span><span class="w"> </span><span class="nx">getName</span><span class="p">(</span><span class="nx">userId</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">)</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">response</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">fetchUser</span><span class="p">(</span><span class="nx">userId</span><span class="p">);</span>
+<div class="hll"><pre><span></span><span class="kd">function</span> <span class="nx">getName</span><span class="p">(</span><span class="nx">userId</span>: <span class="kt">number</span><span class="p">)</span><span class="o">:</span> <span class="kt">string</span> <span class="p">{</span>
+  <span class="kd">const</span> <span class="nx">response</span> <span class="o">=</span> <span class="nx">fetchUser</span><span class="p">(</span><span class="nx">userId</span><span class="p">);</span>
 
-<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">response</span><span class="p">.</span><span class="nx">user</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">response</span><span class="p">.</span><span class="nx">user</span><span class="p">.</span><span class="nx">name</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="s1">&#39;Anonymous&#39;</span><span class="p">;</span>
-<span class="w">  </span><span class="p">}</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">response</span><span class="p">.</span><span class="nx">user</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">response</span><span class="p">.</span><span class="nx">user</span><span class="p">.</span><span class="nx">name</span> <span class="o">??</span> <span class="s1">&#39;Anonymous&#39;</span><span class="p">;</span>
+  <span class="p">}</span>
 
-<span class="w">  </span><span class="k">throw</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="ne">Error</span><span class="p">(</span><span class="s1">&#39;User not found&#39;</span><span class="p">);</span>
+  <span class="k">throw</span> <span class="ow">new</span> <span class="ne">Error</span><span class="p">(</span><span class="s1">&#39;User not found&#39;</span><span class="p">);</span>
 <span class="p">}</span>
 </pre></div>
 <p>This code is more in control of it's data. It knows which conditions need to be checked. We didn't set out to write code that does this, but were led to do so by removing the conditional chaining operators.</p>
