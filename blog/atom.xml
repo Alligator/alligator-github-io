@@ -5,12 +5,201 @@
   <link rel="alternate" type="text/html" href="https://alligatr.co.uk/blog"/>
   <link rel="self" type="application/atom+xml" href="https://alligatr.co.uk/blog/atom.xml"/>
   
-  <updated>2024-02-13T00:00:00Z</updated>
+  <updated>2026-09-22T00:00:00Z</updated>
   <id>https://alligatr.co.uk/blog</id>
   <author>
     <name>alligator</name>
   </author>
 
+  
+  <entry>
+    <title>git-tree.awk</title>
+    <link href="https://alligatr.co.uk/blog/an-awk-git-repo-visualiser/" />
+    <id>https://alligatr.co.uk/blog/an-awk-git-repo-visualiser/</id>
+    <updated>2026-09-22T00:00:00Z</updated>
+    <content type="html">
+      <![CDATA[
+      <p>I wrote a git tree visualiser in AWK. Here it is showing the tree for <a href="https://github.com/Alligator/accent.vim">accent.vim</a>, my vim coloursceheme:</p>
+<p><a href="an-awk-git-repo-visualiser/screen.png"><img src="an-awk-git-repo-visualiser/screen.png" alt=""></a></p>
+<p>You can try it <a href="../static/accent.html">here</a>.</p>
+<p>The source code is <a href="https://github.com/Alligator/git-tree.awk">here</a>.</p>
+<p>It generates a single static HTML file. The file tree is on the left, the file content is on the right. Clicking on a file will show its content.</p>
+<p>I learned some interesting things about AWK and HTML by writing this, but first.</p>
+<h2 id="why">Why?</h2><p>For fun, and because I like AWK. It's minimal, it's everywhere, it's older than me (and probably you). Writing programs in AWK is like being a beginner again; you have a limited set of tools and you have to find new ways to solve problems with them.</p>
+<hr>
+<p>Here are some things I learned about AWK.</p>
+<h2 id="multidimensional-arrays">Multidimensional Arrays</h2><p>I store a type (<code>blob</code> or <code>tree</code>) and a path for each file in the repo. In another language I'd keep a list of objects:</p>
+<div class="hll"><pre><span></span><span class="p">[</span>
+<span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nx">type</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;blob&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">path</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;README.md&quot;</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nx">type</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;tree&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">path</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;src&quot;</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nx">type</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;blob&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">path</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;src/main.go&quot;</span><span class="w"> </span><span class="p">},</span>
+<span class="p">]</span>
+</pre></div>
+<p>But AWK only has one collection type, the associative array. <a href="https://pubs.opengroup.org/onlinepubs/9699919799/utilities/awk.html">POSIX AWK</a> doesn't support nested arrays either. Unless I want to reply on GNU AWK (I don't), I can't do this:</p>
+<div class="hll"><pre><span></span><span class="nx">files</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nx">type</span>
+<span class="nx">files</span><span class="p">[</span><span class="nx">i</span><span class="p">][</span><span class="s2">&quot;path&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nx">path</span>
+</pre></div>
+<p>You <em>can</em> use comma separated indexes though:</p>
+<div class="hll"><pre><span></span><span class="nx">files</span><span class="p">[</span><span class="nx">i</span><span class="p">,</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nx">type</span>
+<span class="nx">files</span><span class="p">[</span><span class="nx">i</span><span class="p">,</span><span class="s2">&quot;path&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nx">path</span>
+</pre></div>
+<aside>
+  <p>
+    There are lots of different AWKs. BSD-derived systems including macOS come with nawk, also known as the One True AWK as it's maintained by Brian Kernighan (the K in AWK) and others.
+  </p>
+  <p>
+  GNU AWK (or gawk) is also common and, as you'd expect from the FSF, has many, many, <em>many</em> extra features.
+  </p>
+</aside><p>This creates an index by joining all the expressions together with <code>SUBSEP</code>. On my system AWK (nawk) <code>SUBSEP</code> is 28, or the ASCII file separator character</p>
+<p>This does make the array longer than the number of files since there's two entries per file. I store the number of files in a separate variable instead.</p>
+<h2 id="nawk-doesn-t-like-0-bytes-in-strings">nawk doesn't like 0 bytes in strings</h2><p>When a file is binary, I show "binary file" instead of it's content. I decided on a <em>very</em> rough heuristic for this: if there's a 0 byte in the first 100 bytes of a file, it's binary. My plan was to read a few lines with <code>getline</code> and call <code>index()</code> to check for a 0 byte:</p>
+<div class="hll"><pre><span></span><span class="k">if</span> <span class="p">(</span><span class="kr">index</span><span class="p">(</span><span class="nx">line</span><span class="p">,</span> <span class="s2">&quot;\0&quot;</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1"># file is binary</span>
+<span class="p">}</span>
+</pre></div>
+<p>But this call to <code>index</code> always returned 1, and every file was considered binary. Here's a small program that hints at why:</p>
+<div class="hll"><pre><span></span>$<span class="w"> </span>awk<span class="w"> </span><span class="s1">&#39;BEGIN {</span>
+<span class="s1">  print &quot;one two\0three&quot;</span>
+<span class="s1">  print index(&quot;one\0two&quot;, &quot;\0&quot;)</span>
+<span class="s1">  print length(&quot;\0&quot;)</span>
+<span class="s1">}&#39;</span>
+one<span class="w"> </span>two
+<span class="m">1</span>
+<span class="m">0</span>
+</pre></div>
+<p>nawk will parse <code>\0</code> in a string and insert a 0 byte, but also treats it as a string terminator! This is very confusing if you're not expecting it.</p>
+<p>My <code>index</code> call always returned 1 because it's actually checking this:</p>
+<div class="hll"><pre><span></span><span class="kr">index</span><span class="p">(</span><span class="nx">line</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+</pre></div>
+<p>And now a digression about AWK version differences.</p>
+<hr>
+<p>I tried this across a few AWKs:</p>
+<table>
+<thead><tr>
+<th>AWK</th>
+<th><code>length("\0")</code></th>
+<th><code>index("a\0b", "\0")</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>nawk</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr>
+<td>GNU AWK</td>
+<td>1</td>
+<td>2</td>
+</tr>
+<tr>
+<td>busybox AWK</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>mawk</td>
+<td>1</td>
+<td>2</td>
+</tr>
+<tr>
+<td>GoAWK</td>
+<td>1</td>
+<td>2</td>
+</tr>
+</tbody>
+</table>
+<p>Note that <code>index</code> returns 1 for the first character in the string.</p>
+<p>GNU AWK, mawk and GoAWK get it right, nawk and busybox AWK don't.</p>
+<p>The same null-termination problem happens when you read data from files, stdin, or via <code>getline</code>. mawk will truncate the string. The well behaved AWKs all read the whole string with the zero byte in it. Busybox AWK is weird. If I create a file with this content:</p>
+<pre><code>one\0two
+</code></pre>
+<p>Then use it as the input file, this happens:</p>
+<div class="hll"><pre><span></span>$<span class="w"> </span>busybox<span class="w"> </span>awk<span class="w"> </span><span class="s1">&#39;{ print $0 }&#39;</span><span class="w"> </span>zerosep.txt
+one
+two
+</pre></div>
+<p>The zero byte was treated as a record separator, apparently.</p>
+<hr>
+<p>Anyway, I couldn't find a way to check a string for a null byte in nawk, so instead I use <code>od</code> to dump the bytes and check for <code>00</code>:</p>
+<div class="hll"><pre><span></span><span class="kd">function</span> <span class="nx">is_binary</span><span class="p">(</span><span class="nx">name</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">while</span> <span class="p">((</span><span class="s2">&quot;od -N 100 -v -t x1 -A n &quot;</span> <span class="nx">name</span> <span class="o">|</span> <span class="kr">getline</span> <span class="nx">l</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="kr">index</span><span class="p">(</span><span class="nx">l</span><span class="p">,</span> <span class="s2">&quot;00&quot;</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="mi">1</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+  <span class="k">return</span> <span class="mi">0</span>
+<span class="p">}</span>
+</pre></div>
+<h2 id="getline-and-close-are-weird"><code>getline</code> and <code>close()</code> are weird</h2><p>To measure how long the program takes, I store timestamps and calculate the difference. I first did this:</p>
+<div class="hll"><pre><span></span><span class="s2">&quot;date +%s&quot;</span> <span class="o">|</span> <span class="kr">getline</span> <span class="nx">start_ts</span>
+<span class="c1"># ... rest of program</span>
+<span class="s2">&quot;date +%s&quot;</span> <span class="o">|</span> <span class="kr">getline</span> <span class="nx">end_ts</span>
+<span class="nx">diff_ts</span> <span class="o">=</span> <span class="nx">end_ts</span> <span class="o">-</span> <span class="nx">start_ts</span>
+</pre></div>
+<p>But <code>end_ts</code> was always empty, unless I commented out the <code>start_ts</code> line. Printing the result of <code>getline</code> gives us some clues why:</p>
+<div class="hll"><pre><span></span>$<span class="w"> </span>awk<span class="w"> </span><span class="s1">&#39;BEGIN {</span>
+<span class="s1">  print (&quot;date +%s&quot; | getline start_ts)</span>
+<span class="s1">  print (&quot;date +%s&quot; | getline end_ts)</span>
+<span class="s1">}&#39;</span>
+<span class="m">1</span>
+<span class="m">0</span>
+</pre></div>
+<p><code>1</code> means success, <code>0</code> means end of file.</p>
+<p>The first <code>getline</code> executes <code>date</code> and sets up a pipe, the next <code>getline</code> is reading from the <code>same</code> pipe. The <code>date</code> command is finished after one line, so there's no more output.</p>
+<p>That seems obvious in retrospect, but it wasn't at all at the time.</p>
+<p>To close the pipe and run a new command, you have to call <code>close()</code>, with the <em>literal string</em> you used in the first call. So to fix my bug, I call <code>close("date +%s")</code> after getting each timestamp.</p>
+<p>I mean the literal string too, whitespace differences will run a new command:</p>
+<div class="hll"><pre><span></span>$<span class="w"> </span>awk<span class="w"> </span><span class="s1">&#39;BEGIN {</span>
+<span class="s1">  &quot;date&quot; | getline date1</span>
+<span class="s1">  &quot; date&quot; | getline date2</span>
+<span class="s1">  print date1</span>
+<span class="s1">  print date2</span>
+<span class="s1">}&#39;</span>
+Wed<span class="w"> </span><span class="m">23</span><span class="w"> </span>Sep<span class="w"> </span><span class="m">2026</span><span class="w"> </span><span class="m">14</span>:35:44<span class="w"> </span>BST
+Wed<span class="w"> </span><span class="m">23</span><span class="w"> </span>Sep<span class="w"> </span><span class="m">2026</span><span class="w"> </span><span class="m">14</span>:35:44<span class="w"> </span>BST
+</pre></div>
+<hr>
+<p>Here are some things I learned about HTML and CSS by making the page interactive with no JavaScript.</p>
+<h2 id="the-details-element">The <code>&lt;details&gt;</code> element</h2><p>I already knew about the <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/details"><code>&lt;details&gt;</code> element</a>, but it's an excellent addition to HTML and I want to remind you it exists. It creates an expandable section with a label (set by the <code>&lt;summary&gt;</code> tag).</p>
+<p>I used it to create directories which can be expanded and collapsed:</p>
+<p><img src="an-awk-git-repo-visualiser/docs-collapsed.png" alt="">
+<img src="an-awk-git-repo-visualiser/docs-expanded.png" alt="">
+<br/><small>
+The docs directory collapsed and expanded.
+</small></p>
+<h2 id="the-target-pseudo-class">The <code>:target</code> pseudo-class</h2><p>When a file is selected on the left, I show the file's content on the right. How do we do that without JavaScript? First, each file is rendered as a <code>&lt;section&gt;</code> element with an id taken from its index in the file array:</p>
+<div class="hll"><pre><span></span><span class="p">&lt;</span><span class="nt">section</span> <span class="na">id</span><span class="o">=</span><span class="s">&quot;file-0&quot;</span><span class="p">&gt;</span>
+  <span class="p">&lt;</span><span class="nt">h2</span><span class="p">&gt;</span>.gitignore<span class="p">&lt;/</span><span class="nt">h2</span><span class="p">&gt;</span>
+  <span class="p">&lt;</span><span class="nt">pre</span><span class="p">&gt;</span>
+    *.json
+    build/
+  <span class="p">&lt;/</span><span class="nt">pre</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">section</span><span class="p">&gt;</span>
+</pre></div>
+<p>Then I hide them all with this CSS:</p>
+<div class="hll"><pre><span></span><span class="p">.</span><span class="nc">content</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="nt">section</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">display</span><span class="p">:</span><span class="w"> </span><span class="kc">none</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+<p>Showing the selected file involves, two parts. The files in the tree are anchor links with an id that matches the relevant section:</p>
+<div class="hll"><pre><span></span><span class="p">&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;#file-0&quot;</span><span class="p">&gt;</span>.gitignore<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;#file-1&quot;</span><span class="p">&gt;</span>LICENSE<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;#file-2&quot;</span><span class="p">&gt;</span>README.md<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
+</pre></div>
+<p>This is the magic CSS to un-hide the file content:</p>
+<div class="hll"><pre><span></span><span class="p">.</span><span class="nc">content</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="nt">section</span><span class="p">:</span><span class="nd">target</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">display</span><span class="p">:</span><span class="w"> </span><span class="kc">block</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+<p>The <code>:target</code> pseudo class selects the element the URL fragment points to. If the URL is <code>repo.html#file-1</code>, the section with the id <code>file-1</code> becomes the target and is un-hidden.</p>
+<hr>
+<p>That's it. If you've never tried writing more than a one-liner in AWK I recommend it. It's familiar, but odd.</p>
+<h2 id="should-you-use-it">Should you use it?</h2><p>Probably not.</p>
+
+      ]]>
+    </content>
+  </entry>
   
   <entry>
     <title>Entity Framework 6 takes a power nap</title>
