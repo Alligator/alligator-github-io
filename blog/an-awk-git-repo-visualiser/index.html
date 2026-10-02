@@ -54,8 +54,8 @@ Sep 22, 2026
   GNU AWK (or gawk) is also common and, as you'd expect from the FSF, has many, many, <em>many</em> extra features.
   </p>
 </aside><p>This creates an index by joining all the expressions together with <code>SUBSEP</code>. On my system AWK (nawk) <code>SUBSEP</code> is 28, or the ASCII file separator character</p>
-<p>This does make the array longer than the number of files since there's two entries per file. I store the number of files in a separate variable instead.</p>
-<h2 id="nawk-doesn-t-like-0-bytes-in-strings">nawk doesn't like 0 bytes in strings</h2><p>When a file is binary, I show "binary file" instead of it's content. I decided on a <em>very</em> rough heuristic for this: if there's a 0 byte in the first 100 bytes of a file, it's binary. My plan was to read a few lines with <code>getline</code> and call <code>index()</code> to check for a 0 byte:</p>
+<p>This does make the array longer than the number of files since there's two entries per file. I store the number of files in a separate variable.</p>
+<h2 id="nawk-doesn-t-like-0-bytes-in-strings">nawk doesn't like 0 bytes in strings</h2><p>When a file is binary, I show "binary file" instead of its content. I decided on a <em>very</em> rough heuristic for this: if there's a 0 byte in the first 100 bytes of a file, it's binary. My plan was to read a few lines with <code>getline</code> and call <code>index()</code> to check for a 0 byte:</p>
 <div class="hll"><pre><span></span><span class="k">if</span> <span class="p">(</span><span class="kr">index</span><span class="p">(</span><span class="nx">line</span><span class="p">,</span> <span class="s2">&quot;\0&quot;</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
   <span class="c1"># file is binary</span>
 <span class="p">}</span>
@@ -74,9 +74,8 @@ one<span class="w"> </span>two
 <p>My <code>index</code> call always returned 1 because it's actually checking this:</p>
 <div class="hll"><pre><span></span><span class="kr">index</span><span class="p">(</span><span class="nx">line</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
 </pre></div>
-<p>And now a digression about AWK version differences.</p>
-<hr>
-<p>I tried this across a few AWKs:</p>
+<p>nawk decides that an empty string is at position 1 of a non-empty string.</p>
+<p>I was curious and tried this across a few AWKs (note that <code>index</code> returns 1 for the first character in the string):</p>
 <table>
 <thead><tr>
 <th>AWK</th>
@@ -96,7 +95,7 @@ one<span class="w"> </span>two
 <td>2</td>
 </tr>
 <tr>
-<td>busybox AWK</td>
+<td>BusyBox AWK</td>
 <td>0</td>
 <td>0</td>
 </tr>
@@ -112,19 +111,8 @@ one<span class="w"> </span>two
 </tr>
 </tbody>
 </table>
-<p>Note that <code>index</code> returns 1 for the first character in the string.</p>
-<p>GNU AWK, mawk and GoAWK get it right, nawk and busybox AWK don't.</p>
-<p>The same null-termination problem happens when you read data from files, stdin, or via <code>getline</code>. mawk will truncate the string. The well behaved AWKs all read the whole string with the zero byte in it. Busybox AWK is weird. If I create a file with this content:</p>
-<pre><code>one\0two
-</code></pre>
-<p>Then use it as the input file, this happens:</p>
-<div class="hll"><pre><span></span>$<span class="w"> </span>busybox<span class="w"> </span>awk<span class="w"> </span><span class="s1">&#39;{ print $0 }&#39;</span><span class="w"> </span>zerosep.txt
-one
-two
-</pre></div>
-<p>The zero byte was treated as a record separator, apparently.</p>
-<hr>
-<p>Anyway, I couldn't find a way to check a string for a null byte in nawk, so instead I use <code>od</code> to dump the bytes and check for <code>00</code>:</p>
+<p>GNU AWK, mawk and GoAWK get it right, nawk and BusyBox AWK don't.</p>
+<p>I couldn't find a way to check a string for a null byte in nawk, instead I use <code>od</code> to dump the first 100 bytes and check for <code>00</code>:</p>
 <div class="hll"><pre><span></span><span class="kd">function</span> <span class="nx">is_binary</span><span class="p">(</span><span class="nx">name</span><span class="p">)</span> <span class="p">{</span>
   <span class="k">while</span> <span class="p">((</span><span class="s2">&quot;od -N 100 -v -t x1 -A n &quot;</span> <span class="nx">name</span> <span class="o">|</span> <span class="kr">getline</span> <span class="nx">l</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">if</span> <span class="p">(</span><span class="kr">index</span><span class="p">(</span><span class="nx">l</span><span class="p">,</span> <span class="s2">&quot;00&quot;</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
@@ -149,10 +137,10 @@ two
 <span class="m">0</span>
 </pre></div>
 <p><code>1</code> means success, <code>0</code> means end of file.</p>
-<p>The first <code>getline</code> executes <code>date</code> and sets up a pipe, the next <code>getline</code> is reading from the <code>same</code> pipe. The <code>date</code> command is finished after one line, so there's no more output.</p>
-<p>That seems obvious in retrospect, but it wasn't at all at the time.</p>
-<p>To close the pipe and run a new command, you have to call <code>close()</code>, with the <em>literal string</em> you used in the first call. So to fix my bug, I call <code>close("date +%s")</code> after getting each timestamp.</p>
-<p>I mean the literal string too, whitespace differences will run a new command:</p>
+<p>The first <code>getline</code> executes <code>date</code> and sets up a pipe, the next <code>getline</code> reads from the same pipe! The <code>date</code> command is finished after one line, so there's no more output and we get a 0.</p>
+<p>That seems obvious in retrospect, since to read all the output from a command you usually loop over <code>getline</code> until it returns 0.</p>
+<p>To close the pipe and run a new command, you have to call <code>close()</code>, with the literal string you used in the first <code>getline</code>. To fix this, I call <code>close("date +%s")</code> after getting each timestamp.</p>
+<p>I mean the <em>literal</em> string too, whitespace differences matter:</p>
 <div class="hll"><pre><span></span>$<span class="w"> </span>awk<span class="w"> </span><span class="s1">&#39;BEGIN {</span>
 <span class="s1">  &quot;date&quot; | getline date1</span>
 <span class="s1">  &quot; date&quot; | getline date2</span>
@@ -162,16 +150,23 @@ two
 Wed<span class="w"> </span><span class="m">23</span><span class="w"> </span>Sep<span class="w"> </span><span class="m">2026</span><span class="w"> </span><span class="m">14</span>:35:44<span class="w"> </span>BST
 Wed<span class="w"> </span><span class="m">23</span><span class="w"> </span>Sep<span class="w"> </span><span class="m">2026</span><span class="w"> </span><span class="m">14</span>:35:44<span class="w"> </span>BST
 </pre></div>
+<p>That's it for surprising things I discovered about AWK, on to the web UI.</p>
 <hr>
-<p>Here are some things I learned about HTML and CSS by making the page interactive with no JavaScript.</p>
-<h2 id="the-details-element">The <code>&lt;details&gt;</code> element</h2><p>I already knew about the <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/details"><code>&lt;details&gt;</code> element</a>, but it's an excellent addition to HTML and I want to remind you it exists. It creates an expandable section with a label (set by the <code>&lt;summary&gt;</code> tag).</p>
+<p>I decided to make the UI interactive without JavaScript. If I'm going to be the sort of grognard who writes AWK scripts I can't be seen writing JS. Here are some things I learned.</p>
+<h2 id="the-details-element">The <code>&lt;details&gt;</code> element</h2><p>I already knew about the <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/details"><code>&lt;details&gt;</code> element</a> but it's an excellent addition to HTML and I want to remind you it exists. It creates an expandable section with a label (set by the <code>&lt;summary&gt;</code> tag).</p>
 <p>I used it to create directories which can be expanded and collapsed:</p>
 <p><img src="docs-collapsed.png" alt="">
 <img src="docs-expanded.png" alt="">
 <br/><small>
 The docs directory collapsed and expanded.
 </small></p>
-<h2 id="the-target-pseudo-class">The <code>:target</code> pseudo-class</h2><p>When a file is selected on the left, I show the file's content on the right. How do we do that without JavaScript? First, each file is rendered as a <code>&lt;section&gt;</code> element with an id taken from its index in the file array:</p>
+<h2 id="the-target-pseudo-class">The <code>:target</code> pseudo-class</h2><p>When a file is selected in the tree I show that file's content on the right. I used the <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Selectors/:target"><code>:target</code></a> pseudo-class to swap out which file is shown.</p>
+<p>First, each file in the tree is rendered as an anchor tag with a document fragment:</p>
+<div class="hll"><pre><span></span><span class="p">&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;#file-0&quot;</span><span class="p">&gt;</span>.gitignore<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;#file-1&quot;</span><span class="p">&gt;</span>LICENSE<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;#file-2&quot;</span><span class="p">&gt;</span>README.md<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
+</pre></div>
+<p>The content is rendered as a section with a matching id:</p>
 <div class="hll"><pre><span></span><span class="p">&lt;</span><span class="nt">section</span> <span class="na">id</span><span class="o">=</span><span class="s">&quot;file-0&quot;</span><span class="p">&gt;</span>
   <span class="p">&lt;</span><span class="nt">h2</span><span class="p">&gt;</span>.gitignore<span class="p">&lt;/</span><span class="nt">h2</span><span class="p">&gt;</span>
   <span class="p">&lt;</span><span class="nt">pre</span><span class="p">&gt;</span>
@@ -180,22 +175,15 @@ The docs directory collapsed and expanded.
   <span class="p">&lt;/</span><span class="nt">pre</span><span class="p">&gt;</span>
 <span class="p">&lt;/</span><span class="nt">section</span><span class="p">&gt;</span>
 </pre></div>
-<p>Then I hide them all with this CSS:</p>
+<p>This CSS hides all the sections except the target, which is the element the document fragment points to:</p>
 <div class="hll"><pre><span></span><span class="p">.</span><span class="nc">content</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="nt">section</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">display</span><span class="p">:</span><span class="w"> </span><span class="kc">none</span><span class="p">;</span>
 <span class="p">}</span>
-</pre></div>
-<p>Showing the selected file involves, two parts. The files in the tree are anchor links with an id that matches the relevant section:</p>
-<div class="hll"><pre><span></span><span class="p">&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;#file-0&quot;</span><span class="p">&gt;</span>.gitignore<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
-<span class="p">&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;#file-1&quot;</span><span class="p">&gt;</span>LICENSE<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
-<span class="p">&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;#file-2&quot;</span><span class="p">&gt;</span>README.md<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
-</pre></div>
-<p>This is the magic CSS to un-hide the file content:</p>
-<div class="hll"><pre><span></span><span class="p">.</span><span class="nc">content</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="nt">section</span><span class="p">:</span><span class="nd">target</span><span class="w"> </span><span class="p">{</span>
+<span class="p">.</span><span class="nc">content</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="nt">section</span><span class="p">:</span><span class="nd">target</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">display</span><span class="p">:</span><span class="w"> </span><span class="kc">block</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
-<p>The <code>:target</code> pseudo class selects the element the URL fragment points to. If the URL is <code>repo.html#file-1</code>, the section with the id <code>file-1</code> becomes the target and is un-hidden.</p>
+<p>Clicking a file will change the URL to <code>#file-X</code> and file X will be shown.</p>
 <hr>
 <p>That's it. If you've never tried writing more than a one-liner in AWK I recommend it. It's familiar, but odd.</p>
 <h2 id="should-you-use-it">Should you use it?</h2><p>Probably not.</p>
